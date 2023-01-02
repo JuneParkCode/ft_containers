@@ -15,21 +15,23 @@ namespace ft
 	template <class T, class Allocator = std::allocator<T> >
 	class vector
 	{
-		/** type define */
-		typedef size_t size_type;
-		typedef T value_type;
-		typedef Allocator allocator_type;
-		/** type define related with allocator */
-		typedef typename allocator_type::reference reference;
-		typedef typename allocator_type::const_reference const_reference;
-		typedef typename allocator_type::pointer pointer;
-		typedef typename allocator_type::const_pointer const_pointer;
+		public:
+			/** type define */
+			typedef size_t										size_type;
+			typedef T											value_type;
+			typedef Allocator									allocator_type;
+			/** type define related with allocator */
+			typedef typename allocator_type::reference			reference;
+			typedef typename allocator_type::const_reference	const_reference;
+			typedef typename allocator_type::pointer			pointer;
+			typedef typename allocator_type::const_pointer		const_pointer;
+			typedef std::allocator_traits<allocator_type>		__alloc_traits;
 		/** member variables  */
 		private:
-			T* 		mData;
-			size_type	mDataStorageSize;
-			size_type	mDataStoreSize; 
-			const Allocator& mAllocator;
+			pointer 											mData;
+			size_type											mDataStorageSize;
+			size_type											mDataStoreSize; 
+			const Allocator&									mAllocator;
 		/* constructor. destructors */
 		public:
 			explicit vector(const Allocator& allocator = std::allocator<T>()):
@@ -47,7 +49,7 @@ namespace ft
 			{
 			}
 			explicit vector(size_type count, 
-					const T& value = T(),
+					const reference value = T(),
 					const Allocator& allocator = std::allocator<T>()):
 				mDataStorageSize(count),
 				mDataStoreSize(count),
@@ -72,14 +74,14 @@ namespace ft
 			}
 			allocator_type get_allocator() const { return (mAllocator); }
 		/* iterators */
-		private:
+		public:
 			class iterator
 			{
-				typedef std::random_access_iterator_tag iterator_category;
-				typedef std::ptrdiff_t difference_type;
-				typedef T value_type;
-				typedef T* pointer_type;
-				typedef T& reference_type;
+				typedef std::random_access_iterator_tag	iterator_category;
+				typedef std::ptrdiff_t					difference_type;
+				typedef T								value_type;
+				typedef pointer							pointer_type;
+				typedef reference						reference_type;
 			private:
 				pointer_type mPtr;
 			public:
@@ -119,11 +121,11 @@ namespace ft
 
 			class const_iterator
 			{
-				typedef std::random_access_iterator_tag iterator_category;
-				typedef std::ptrdiff_t difference_type;
-				typedef T value_type;
-				typedef T* pointer_type;
-				typedef T& reference_type;
+				typedef std::random_access_iterator_tag	iterator_category;
+				typedef std::ptrdiff_t					difference_type;
+				typedef T								value_type;
+				typedef pointer							pointer_type;
+				typedef reference						reference_type;
 			private:
 				pointer_type mPtr;
 			public:
@@ -163,11 +165,11 @@ namespace ft
 			/** FIXME: reverse iterator uses std::reverse_iterator<T>  */
 			class reverse_iterator
 			{
-				typedef std::random_access_iterator_tag iterator_category;
-				typedef std::ptrdiff_t difference_type;
-				typedef T value_type;
-				typedef T* pointer_type;
-				typedef T& reference_type;
+				typedef std::random_access_iterator_tag	iterator_category;
+				typedef std::ptrdiff_t					difference_type;
+				typedef T								value_type;
+				typedef pointer							pointer_type;
+				typedef reference						reference_type;
 			private:
 				pointer_type mPtr;
 			public:
@@ -207,11 +209,11 @@ namespace ft
 
 			class const_reverse_iterator
 			{
-				typedef std::random_access_iterator_tag iterator_category;
-				typedef std::ptrdiff_t difference_type;
-				typedef T value_type;
-				typedef T* pointer_type;
-				typedef T& reference_type;
+				typedef std::random_access_iterator_tag	iterator_category;
+				typedef std::ptrdiff_t					difference_type;
+				typedef T								value_type;
+				typedef pointer							pointer_type;
+				typedef reference						reference_type;
 			private:
 				pointer_type mPtr;
 			public:
@@ -248,21 +250,20 @@ namespace ft
 				bool operator==(const const_reverse_iterator& it) { return (mPtr == it.mPtr); }
 				bool operator!=(const const_reverse_iterator& it) { return (mPtr != it.mPtr); }
 			};
-		public:
-			iterator begin() { return (iterator(&mData[0])); }
-			iterator end() { return (iterator(&mData[mDataStorageSize])); }
-			const_iterator cbegin() const { return (const_iterator(&mData[0])); }
-			const_iterator cend() const { return (const_iterator(&mData[mDataStorageSize])); }
-			reverse_iterator rbegin() { return (reverse_iterator(&mData[mDataStorageSize - 1])); }
-			reverse_iterator rend() { return (reverse_iterator(&mData[-1])); }
-			const_reverse_iterator crbegin() const { return (const_reverse_iterator(&mData[mDataStorageSize - 1])); }
-			const_reverse_iterator crend() const { return (const_reverse_iterator(&mData[-1])); }
+			iterator				begin() { return (iterator(&mData[0])); }
+			iterator				end() { return (iterator(&mData[mDataStorageSize])); }
+			const_iterator			cbegin() const { return (const_iterator(&mData[0])); }
+			const_iterator			cend() const { return (const_iterator(&mData[mDataStorageSize])); }
+			reverse_iterator		rbegin() { return (reverse_iterator(&mData[mDataStorageSize - 1])); }
+			reverse_iterator		rend() { return (reverse_iterator(&mData[-1])); }
+			const_reverse_iterator	crbegin() const { return (const_reverse_iterator(&mData[mDataStorageSize - 1])); }
+			const_reverse_iterator	crend() const { return (const_reverse_iterator(&mData[-1])); }
 		/** member functions */
 		public:
 			/** capacity  */
-			size_type size() const { return (mDataStoreSize); }
-			size_type max_size() const { return (INT32_MAX); }
-			void resize(size_type n, value_type val = value_type()) // it destroy stored data
+			size_type				size() const { return (mDataStoreSize); }
+			size_type				max_size() const { return (INT32_MAX); }
+			void					resize(size_type n, value_type val = value_type()) // it destroy stored data
 			{
 				if (n < this->mDataStoreSize)
 				{
@@ -276,11 +277,8 @@ namespace ft
 				{
 					if (n > this->mDataStorageSize)
 					{
-						T* newData = mAllocator.allocate(sizeof(T), n);
-						for (size_type i = 0; i < mDataStoreSize; ++i)
-						{
-							newData[i] = mData[i];
-						}
+						pointer newData = mAllocator.allocate(sizeof(T), n);
+						::memmove(newData, mData, sizeof(T) * (mDataStoreSize));
 						for (size_type i = mDataStoreSize; i < n; ++i)
 						{
 							newData[i] = val;
@@ -301,17 +299,14 @@ namespace ft
 					}
 				}
 			}
-			size_type capacity() const { return (mDataStorageSize); }
-			bool empty() const { return (mDataStoreSize == 0); }
-			void reserve(size_type n)
+			size_type				capacity() const { return (mDataStorageSize); }
+			bool					empty() const { return (mDataStoreSize == 0); }
+			void					reserve(size_type n)
 			{
 				if (n > mDataStorageSize)
 				{
-					T* newData = mAllocator.allocate(sizeof(T), n);
-					for (size_type i = 0; i < mDataStoreSize; ++i)
-					{
-						newData[i] = mData[i];
-					}
+					pointer newData = mAllocator.allocate(sizeof(T), n);
+					::memmove(newData, mData, sizeof(T) * (mDataStoreSize));
 					if (mData)
 						mAllocator.deallocate(sizeof(T), mDataStorageSize);
 					mData = newData;
@@ -320,28 +315,28 @@ namespace ft
 			}
 			
 			/** element access */
-			T& operator[](int idx) const { return (mData[idx]); }
-			T& at(size_type n)
+			reference				operator[](int idx) const { return (mData[idx]); }
+			reference				at(size_type n)
 			{
 				if (n > mDataStoreSize || n < 0)
 					throw (std::out_of_range("out of range : at()"));
 				return (mData[n]);
 			}
-			const T& at(size_type n) const
+			const reference			at(size_type n) const
 			{
 				if (n > mDataStoreSize || n < 0)
 					throw (std::out_of_range("out of range : at()"));
 				return (mData[n]);
 			}
-			T& front() { return (mData[0]); }
-			const T& front() const { return (mData[0]); }
-			T& back() { return (mData[mDataStoreSize - 1]); }
-			const T& back() const { return (mData[mDataStoreSize - 1]); }
-			const T* data() const { return (mData); }
+			reference				front() { return (mData[0]); }
+			const reference			front() const { return (mData[0]); }
+			reference				back() { return (mData[mDataStoreSize - 1]); }
+			const reference			back() const { return (mData[mDataStoreSize - 1]); }
+			const pointer			data() const { return (mData); }
 			
 			/** modifiers */
 			template <class InputIterator>
-			void assign(InputIterator first, InputIterator last)
+			void					assign(InputIterator first, InputIterator last)
 			{
 				const size_type SIZE = std::distance(first, last); 
 				this->clear();
@@ -352,7 +347,7 @@ namespace ft
 				}
 				mDataStoreSize = SIZE;
 			}
-			void assign(size_type n, const value_type& val)
+			void					assign(size_type n, const value_type& val)
 			{
 				this->clear();
 				this->reserve(n);
@@ -362,17 +357,17 @@ namespace ft
 				}
 				mDataStoreSize = n;
 			}
-			void push_back(const value_type& val)
+			void					push_back(const value_type& val)
 			{
 				if (mDataStoreSize == mDataStorageSize)
 					this->reserve(mDataStorageSize == 0 ? 1 : mDataStorageSize * 2);
 				mData[mDataStoreSize++] = val;
 			}
-			void pop_back(const value_type& val) // check empty before use it.
+			void					pop_back(const value_type& val) // check empty before use it.
 			{
 				mData[--mDataStoreSize].~T();
 			}
-			iterator insert(iterator position, const value_type& val)
+			iterator				insert(iterator position, const value_type& val)
 			{
 				const size_type BEGIN_IDX = std::distance(begin(), position);
 				const size_type NEW_SIZE = mDataStoreSize + 1;
@@ -387,7 +382,7 @@ namespace ft
 					else // reallocation
 					{
 						const size_type SIZE = mDataStorageSize * 2;
-						T* newData = mAllocator.allocate(sizeof(T), SIZE);
+						pointer newData = mAllocator.allocate(sizeof(T), SIZE);
 
 						::memmove(newData, mData, sizeof(T) * (BEGIN_IDX));
 						newData[BEGIN_IDX] = val;
@@ -406,7 +401,7 @@ namespace ft
 					++mDataStoreSize;
 				}
 			}
-			void insert(iterator position, size_type n, const value_type& val)
+			void					insert(iterator position, size_type n, const value_type& val)
 			{
 				const size_type BEGIN_IDX = std::distance(begin(), position);
 				const size_type NEW_STORED_SIZE = mDataStoreSize + n;
@@ -424,7 +419,7 @@ namespace ft
 					else // reallocation
 					{
 						const size_type SIZE = mDataStorageSize * 2;
-						T* newData = mAllocator.allocate(sizeof(T), SIZE);
+						pointer newData = mAllocator.allocate(sizeof(T), SIZE);
 
 						::memmove(newData, mData, sizeof(T) * (BEGIN_IDX));
 						for (size_type idx = BEGIN_IDX; idx < BEGIN_IDX + n; ++idx)
@@ -450,7 +445,7 @@ namespace ft
 				mDataStoreSize = NEW_STORED_SIZE;
 			}
 			template <class InputIterator>
-			void insert(iterator position, InputIterator first, InputIterator last)
+			void					insert(iterator position, InputIterator first, InputIterator last)
 			{
 				const size_type BEGIN_IDX = std::distance(begin(), position);
 				const size_type INSERT_SIZE = std::distance(first, last);
@@ -467,7 +462,7 @@ namespace ft
 					else // reallocation
 					{
 						const size_type SIZE = mDataStorageSize * 2;
-						T* newData = mAllocator.allocate(sizeof(T), SIZE);
+						pointer newData = mAllocator.allocate(sizeof(T), SIZE);
 
 						::memmove(newData, mData, sizeof(T) * (BEGIN_IDX));
 						iterator it = first;
@@ -494,23 +489,23 @@ namespace ft
 					}
 				}
 			}
-			iterator erase(iterator position)
+			iterator				erase(iterator position)
 			{
 				std::copy(position + 1, end(), position);
 				--mDataStoreSize;
 			}
-			iterator erase(iterator first, iterator last)
+			iterator				erase(iterator first, iterator last)
 			{
 				if (first == last)
 					return ;
 				std::copy(last, end(), first);
 				mDataStoreSize -= last - first;
 			}
-			void swap(vector& x)
+			void					swap(vector& x)
 			{
 				if (x.mData == mData)
 					return ;
-				T* tmpData = mData;
+				pointer tmpData = mData;
 				size_type tmpStorageSize = mDataStorageSize;
 				size_type tmpStoreSize = mDataStoreSize;
 
@@ -521,7 +516,7 @@ namespace ft
 				mDataStoreSize = x.mDataStoreSize;
 				x.mDataStoreSize = tmpStoreSize;
 			}
-			void clear()
+			void					clear()
 			{
 				for (size_type idx = 0; idx < mDataStoreSize; ++idx)
 				{
@@ -535,8 +530,8 @@ namespace ft
 	{
 		if (first.size() != second.size())
 			return (false);
-		const size_t SIZE = first.size();
 		
+		const size_t SIZE = first.size();
 		for (size_t idx = 0; idx < SIZE; ++idx)
 		{
 			if (first[idx] != second[idx])
