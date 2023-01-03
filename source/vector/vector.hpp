@@ -2,7 +2,6 @@
 #define VECTOR_HPP
 
 #include <exception>
-#include <iterator>
 #include <memory>
 #include "ft_iterator.hpp"
 
@@ -17,14 +16,14 @@ namespace ft
 			typedef T			value_type;
 			typedef Allocator	allocator_type;
 			/** type define related with allocator */
-			typedef typename allocator_type::reference			reference;
-			typedef typename allocator_type::const_reference	const_reference;
-			typedef typename allocator_type::pointer			pointer;
-			typedef typename allocator_type::const_pointer		const_pointer;
-			typedef std::allocator_traits<allocator_type>		__alloc_traits;
+			typedef typename allocator_type::reference				reference;
+			typedef typename allocator_type::const_reference		const_reference;
+			typedef typename allocator_type::pointer				pointer;
+			typedef typename allocator_type::const_pointer			const_pointer;
+			typedef std::allocator_traits<allocator_type>			__alloc_traits;
 			/** iterator types */
-			typedef typename std::iterator<std::random_access_iterator_tag, value_type>	iterator;
-			typedef typename ft::reverse_iterator<iterator>								reverse_iterator;
+			typedef typename std::iterator<pointer, value_type>		iterator;
+			typedef typename ft::reverse_iterator<iterator>			reverse_iterator;
 
 		/** member variables  */
 		private:
@@ -44,7 +43,7 @@ namespace ft
 			explicit vector(size_type size, const Allocator& allocator = std::allocator<T>()):
 				mDataStorageSize(size),
 				mDataStoreSize(0),
-				mData(allocator.allocate(sizeof(T), size)),
+				mData(allocator.allocate(size)),
 				mAllocator(allocator)
 			{
 			}
@@ -53,7 +52,7 @@ namespace ft
 					const Allocator& allocator = std::allocator<T>()):
 				mDataStorageSize(count),
 				mDataStoreSize(count),
-				mData(allocator.allocate(sizeof(T), count)),
+				mData(allocator.allocate(count)),
 				mAllocator(allocator)
 			{
 				// init values
@@ -97,14 +96,14 @@ namespace ft
 				{
 					if (n > this->mDataStorageSize)
 					{
-						pointer newData = mAllocator.allocate(sizeof(T), n);
+						pointer newData = mAllocator.allocate(n);
 						::memmove(newData, mData, sizeof(T) * (mDataStoreSize));
 						for (size_type i = mDataStoreSize; i < n; ++i)
 						{
 							newData[i] = val;
 						}
 						if (mData)
-							mAllocator.deallocate(sizeof(T), mDataStorageSize);
+							mAllocator.deallocate(mDataStorageSize);
 						mData = newData;
 						mDataStorageSize = n;
 						mDataStoreSize = n;
@@ -125,10 +124,10 @@ namespace ft
 			{
 				if (n > mDataStorageSize)
 				{
-					pointer newData = mAllocator.allocate(sizeof(T), n);
+					pointer newData = mAllocator.allocate(n);
 					::memmove(newData, mData, sizeof(T) * (mDataStoreSize));
 					if (mData)
-						mAllocator.deallocate(sizeof(T), mDataStorageSize);
+						mAllocator.deallocate(mDataStorageSize);
 					mData = newData;
 					mDataStorageSize = n;
 				}
@@ -202,7 +201,7 @@ namespace ft
 					else // reallocation
 					{
 						const size_type SIZE = mDataStorageSize * 2;
-						pointer newData = mAllocator.allocate(sizeof(T), SIZE);
+						pointer newData = mAllocator.allocate(SIZE);
 
 						::memmove(newData, mData, sizeof(T) * (BEGIN_IDX));
 						newData[BEGIN_IDX] = val;
@@ -239,7 +238,7 @@ namespace ft
 					else // reallocation
 					{
 						const size_type SIZE = mDataStorageSize * 2;
-						pointer newData = mAllocator.allocate(sizeof(T), SIZE);
+						pointer newData = mAllocator.allocate(SIZE);
 
 						::memmove(newData, mData, sizeof(T) * (BEGIN_IDX));
 						for (size_type idx = BEGIN_IDX; idx < BEGIN_IDX + n; ++idx)
@@ -282,7 +281,7 @@ namespace ft
 					else // reallocation
 					{
 						const size_type SIZE = mDataStorageSize * 2;
-						pointer newData = mAllocator.allocate(sizeof(T), SIZE);
+						pointer newData = mAllocator.allocate(SIZE);
 
 						::memmove(newData, mData, sizeof(T) * (BEGIN_IDX));
 						iterator it = first;
