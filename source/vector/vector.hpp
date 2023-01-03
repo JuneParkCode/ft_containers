@@ -27,42 +27,43 @@ namespace ft
 
 		/** member variables  */
 		private:
-			pointer 			mData;
+			pointer 			mStartData;
+			pointer				mFinishData;
+			pointer				mEndOfStorage;
 			size_type			mDataStorageSize;
 			size_type			mDataStoreSize; 
 			const Allocator&	mAllocator;
 		/* constructor. destructors */
 		public:
 			explicit vector(const Allocator& allocator = std::allocator<T>()):
-				mDataStorageSize(0),
-				mDataStoreSize(0),
-				mData(NULL),
+				mStartData(0),
+				mFinishData(0),
+				mEndOfStorage(NULL),
 				mAllocator(allocator)
 			{
 			}
 			explicit vector(size_type size, const Allocator& allocator = std::allocator<T>()):
-				mDataStorageSize(size),
-				mDataStoreSize(0),
-				mData(allocator.allocate(size)),
+				mStartData(allocator.allocate(size)),
+				mFinishData(mStartData),
+				mEndOfStorage(mStartData + size),
 				mAllocator(allocator)
 			{
 			}
 			explicit vector(size_type count, 
 					const reference value = T(),
 					const Allocator& allocator = std::allocator<T>()):
-				mDataStorageSize(count),
-				mDataStoreSize(count),
-				mData(allocator.allocate(count)),
+				mStartData(allocator.allocate(count)),
+				mFinishData(mStartData + count),
+				mEndOfStorage(mStartData + count),
 				mAllocator(allocator)
 			{
 				// init values
-				for (size_type idx = 0; idx < count; ++idx)
-					mData[idx] = value;
+				std::uninitialized_fill_n(mStartData, count, value);
 			}
 			~vector()
 			{
-				if (mData)
-					mAllocator.deallocate(mData, mDataStorageSize);
+				if (mStartData)
+					mAllocator.deallocate(mStartData, capacity());
 			}
 			vector& operator=(const vector<T>& rhs)
 			{
@@ -73,10 +74,20 @@ namespace ft
 			}
 			allocator_type get_allocator() const		{ return (mAllocator); }
 		/* iterators */
-			iterator				begin()				{ return (iterator(&mData[0])); }
-			iterator				end()				{ return (iterator(&mData[mDataStorageSize])); }
+			iterator				begin()				{ return (iterator(mStartData)); }
+			iterator				end()				{ return (iterator(mFinishData)); }
 			reverse_iterator		rbegin()			{ return (reverse_iterator(end())); }
 			reverse_iterator		rend()				{ return (reverse_iterator(begin())); }
+		private:
+		/** helper */
+			template <class Iter>
+			void destroy(Iter first, Iter last)
+			{
+				for (; first != last; ++first)
+				{
+					first->~value_type();
+				}
+			}
 		/** member functions */
 		public:
 			/** capacity  */
@@ -86,35 +97,25 @@ namespace ft
 			{
 				if (n < this->mDataStoreSize)
 				{
-					for (size_type i = mDataStoreSize; i < n; ++i)
-					{
-						mData[i].~value_type();
-					}
-					mDataStoreSize = n;
+					destroy(mStartData + n, mFinishData);
+					mFinishData = mStartData + n;
 				}
 				else
 				{
 					if (n > this->mDataStorageSize)
 					{
 						pointer newData = mAllocator.allocate(n);
-						::memmove(newData, mData, sizeof(T) * (mDataStoreSize));
-						for (size_type i = mDataStoreSize; i < n; ++i)
-						{
-							newData[i] = val;
-						}
-						if (mData)
-							mAllocator.deallocate(mDataStorageSize);
-						mData = newData;
-						mDataStorageSize = n;
-						mDataStoreSize = n;
+						std::uninitialized_copy(mStartData, mFinishData, newData);
+						std::uninitialized_fill_n(newData + size(), n - size(), val);
+						mAllocator.deallocate(mDataStorageSize);
+						mStartData = newData;
+						mFinishData = mStartData + n;
+						mEndOfStorage = mStartData + n;
 					}
 					else
 					{
-						for (size_type i = mDataStoreSize; i < n; ++i)
-						{
-							mData[i] = val;
-						}
-						mDataStoreSize = n;
+						std::fill(mFinishData, mFinishData + n, val);
+						mFinishData += n;
 					}
 				}
 			}
@@ -125,10 +126,10 @@ namespace ft
 				if (n > mDataStorageSize)
 				{
 					pointer newData = mAllocator.allocate(n);
-					::memmove(newData, mData, sizeof(T) * (mDataStoreSize));
-					if (mData)
+					std::uninitialized_copy(mStartData, mFinishData, newData);
+					if (mStartData)
 						mAllocator.deallocate(mDataStorageSize);
-					mData = newData;
+					mStartData = newData;
 					mDataStorageSize = n;
 				}
 			}
