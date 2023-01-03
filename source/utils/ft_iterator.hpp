@@ -3,6 +3,8 @@
 
 #include <iterator>
 #include <memory>
+#include <vector>
+#include <map>
 
 namespace ft
 {
@@ -18,7 +20,12 @@ namespace ft
 	};
 
 	template <class Iter>
-	class reverse_iterator
+	class reverse_iterator : public std::iterator<
+								typename std::iterator_traits<Iter>::iterator_category,
+								typename std::iterator_traits<Iter>::iterator_category,
+								typename std::iterator_traits<Iter>::iterator_category,
+								typename std::iterator_traits<Iter>::iterator_category,
+								typename std::iterator_traits<Iter>::iterator_category>
 	{
 		private:
 			typedef typename ft::iterator_traits<Iter>	ftIter;

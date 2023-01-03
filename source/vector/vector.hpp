@@ -89,7 +89,7 @@ namespace ft
 				{
 					for (size_type i = mDataStoreSize; i < n; ++i)
 					{
-						mData[i].~T();
+						mData[i].~value_type();
 					}
 					mDataStoreSize = n;
 				}
@@ -185,7 +185,7 @@ namespace ft
 			}
 			void					pop_back(const value_type& val) // check empty before use it.
 			{
-				mData[--mDataStoreSize].~T();
+				mData[--mDataStoreSize].~value_type();
 			}
 			iterator				insert(iterator position, const value_type& val)
 			{
@@ -340,7 +340,7 @@ namespace ft
 			{
 				for (size_type idx = 0; idx < mDataStoreSize; ++idx)
 				{
-					mData[idx].~T();
+					mData[idx].~value_type();
 				}
 				mDataStoreSize = 0;
 			}
