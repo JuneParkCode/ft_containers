@@ -6,16 +6,7 @@
 
 namespace ft
 {
-	/**
-	 * ITERATOR_TRAITS
-	 * Member types
-		Member type	Definition
-		difference_type		Iter::difference_type
-		value_type			Iter::value_type
-		pointer				Iter::pointer
-		reference			Iter::reference
-		iterator_category	Iter::iterator_category
-	 */
+	
 	template <class Iter>
 	struct iterator_traits
 	{
@@ -26,18 +17,6 @@ namespace ft
 		typedef typename Iter::iterator_category	iterator_category;
 	};
 
-	/**
-	 * Member type	Definition
-		iterator_type		Iter
-		iterator_category	std::iterator_traits<Iter>::iterator_category
-		value_type			std::iterator_traits<Iter>::value_type
-		difference_type		std::iterator_traits<Iter>::difference_type
-		pointer				std::iterator_traits<Iter>::pointer
-		reference			std::iterator_traits<Iter>::reference
-
-		template parameter Iter is A bidirectional iterator type.
-		Or a random-access iterator, if an operator that requires such a category of iterators is used.
-	 */
 	template <class Iter>
 	class reverse_iterator
 	{
@@ -88,10 +67,10 @@ namespace ft
 	bool	operator>(const ft::reverse_iterator<Iterator1>& lhs, const ft::reverse_iterator<Iterator2>& rhs)	{ return (lhs.base() > rhs.base()); }
 	template <class Iterator1, class Iterator2>
 	bool	operator<(const ft::reverse_iterator<Iterator1>& lhs, const ft::reverse_iterator<Iterator2>& rhs)	{ return (lhs.base() < rhs.base()); }
-	template <class Iter >
+	template <class Iter>
 	reverse_iterator<Iter>
 			operator+(typename reverse_iterator<Iter>::difference_type n, const reverse_iterator<Iter>& it)		{ return (it.base() - n); }
-	template <class Iter >
+	template <class Iter>
 	reverse_iterator<Iter>
 			operator-(typename reverse_iterator<Iter>::difference_type n, const reverse_iterator<Iter>& it)		{ return (it.base() + n); }
 }
