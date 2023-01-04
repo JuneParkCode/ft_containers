@@ -33,29 +33,35 @@ namespace ft
 
 		/** member variables  */
 		private:
-			iterator 	mStartData;
-			iterator	mFinishData;
-			iterator	mEndOfStorage;
+			iterator 		mStartData;
+			iterator		mFinishData;
+			iterator		mEndOfStorage;
+			allocator_type	mAllocator;
 		/* constructor. destructors */
 		public:
 			vector():
 				mStartData(0),
 				mFinishData(0),
-				mEndOfStorage(0)
+				mEndOfStorage(0),
+				mAllocator(allocator_type())
 			{
 			}
-			explicit vector(const Allocator&):
+			explicit vector(const Allocator& alloc):
 				mStartData(0),
 				mFinishData(0),
-				mEndOfStorage(NULL)
+				mEndOfStorage(0),
+				mAllocator(alloc)
 			{
 			}
 			explicit vector( size_type count, const T& value = T(), const Allocator& alloc = Allocator()):
-				mStartData(allocator_type().allocate(count)),
-				mFinishData(mStartData + count),
-				mEndOfStorage(mStartData + count)
+				mStartData(0),
+				mFinishData(0),
+				mEndOfStorage(0),
+				mAllocator(alloc)
 			{
-				(void) alloc;
+				mStartData = mAllocator.allocate(count);
+				mFinishData = mStartData + count;
+				mEndOfStorage = mStartData + count;
 				std::uninitialized_fill_n(mStartData, count, value);
 			}
 			// FIXME: vector<int> v (1, 2) -> goes here!!
@@ -63,24 +69,31 @@ namespace ft
 			vector(InputIt first,
 				typename std::enable_if<!std::is_integral<InputIt>::value, InputIt>::type last,
 				const Allocator& alloc = Allocator()):
-					mStartData(allocator_type().allocate(std::distance(first, last))),
-					mFinishData(mStartData + std::distance(first, last)),
-					mEndOfStorage(mStartData + std::distance(first, last))
+					mStartData(0),
+					mFinishData(0),
+					mEndOfStorage(0),
+					mAllocator(alloc)
 			{
-				(void) alloc;
+				mStartData = mAllocator.allocate(std::distance(first, last));
+				mFinishData = mStartData + std::distance(first, last);
+				mEndOfStorage = mFinishData;
 				std::uninitialized_copy(first, last, begin());
 			}
 			vector(const vector& other):
-				mStartData(allocator_type().allocate(other.capacity())),
-				mFinishData(mStartData + other.size()),
-				mEndOfStorage(mStartData + other.capacity())
+					mStartData(0),
+					mFinishData(0),
+					mEndOfStorage(0),
+					mAllocator(other.get_allocator())
 			{
+				mStartData = mAllocator.allocate(other.capacity());
+				mFinishData = mStartData + other.size();
+				mEndOfStorage = mFinishData;
 				std::uninitialized_copy(other.begin(), other.end(), begin());	
 			}
 			~vector()
 			{
 				if (mStartData.base())
-					allocator_type().deallocate(mStartData.base(), capacity());
+					mAllocator.deallocate(mStartData.base(), capacity());
 			}
 			vector& operator=(const vector<T>& rhs)
 			{
@@ -90,7 +103,7 @@ namespace ft
 					this->push_back(rhs[idx]);
 				return (*this);
 			}
-			FT_INLINE allocator_type get_allocator() const FT_NOEXCEPT	{ return (allocator_type()); }
+			FT_INLINE allocator_type get_allocator() const FT_NOEXCEPT	{ return (mAllocator); }
 		/* iterators */
 			iterator				begin()		FT_NOEXCEPT			{ return (iterator(mStartData)); }
 			const_iterator			begin()		const FT_NOEXCEPT	{ return (const_iterator(mStartData)); }
@@ -132,10 +145,10 @@ namespace ft
 				{
 					if (n > capacity())
 					{
-						pointer newData = allocator_type().allocate(n);
+						pointer newData = mAllocator.allocate(n);
 						std::uninitialized_copy(mStartData, mFinishData, newData);
 						std::uninitialized_fill_n(newData + size(), n - size(), val);
-						allocator_type().deallocate(mStartData.base(), capacity());
+						mAllocator.deallocate(mStartData.base(), capacity());
 						mStartData = newData;
 						mFinishData = mStartData + n;
 						mEndOfStorage = mStartData + n;
@@ -151,10 +164,10 @@ namespace ft
 			{
 				if (n > capacity())
 				{
-					pointer newData = allocator_type().allocate(n);
+					pointer newData = mAllocator.allocate(n);
 					std::uninitialized_copy(mStartData, mFinishData, newData);
 					if (mStartData.base())
-						allocator_type().deallocate(mStartData.base(), capacity());
+						mAllocator.deallocate(mStartData.base(), capacity());
 					mFinishData = newData + size();
 					mStartData = newData;
 					mEndOfStorage = mStartData + n;
@@ -226,13 +239,13 @@ namespace ft
 					else // reallocation
 					{
 						const size_type NEW_CAPACITY = capacity() * 2;
-						pointer newData = allocator_type().allocate(NEW_CAPACITY);
+						pointer newData = mAllocator.allocate(NEW_CAPACITY);
 
 						std::uninitialized_copy(mStartData, position, newData);
 						newData[BEGIN_IDX] = val;
 						std::uninitialized_copy(position, mFinishData, newData + BEGIN_IDX);
 						if (mStartData.base())
-							allocator_type().deallocate(mStartData.base(), capacity());
+							mAllocator.deallocate(mStartData.base(), capacity());
 						mStartData = newData;
 						mFinishData = mStartData + NEW_SIZE;
 						mEndOfStorage = mStartData + NEW_CAPACITY;
@@ -263,13 +276,13 @@ namespace ft
 					else // reallocation
 					{
 						const size_type NEW_CAPACITY = capacity() * 2;
-						pointer newData = allocator_type().allocate(NEW_CAPACITY);
+						pointer newData = mAllocator.allocate(NEW_CAPACITY);
 
 						std::uninitialized_copy(mStartData, position, newData);
 						std::uninitialized_fill_n(newData + BEGIN_IDX, n, val);
 						std::uninitialized_copy(position, mFinishData, newData + BEGIN_IDX + n);
 						if (mStartData.base())
-							allocator_type().deallocate(mStartData.base(), capacity());
+							mAllocator.deallocate(mStartData.base(), capacity());
 						mStartData = newData;
 						mEndOfStorage = mStartData + NEW_CAPACITY;
 					}
@@ -302,13 +315,13 @@ namespace ft
 					else // reallocation
 					{
 						const size_type NEW_CAPACITY = capacity() * 2;
-						pointer newData = allocator_type().allocate(NEW_CAPACITY);
+						pointer newData = mAllocator.allocate(NEW_CAPACITY);
 
 						std::uninitialized_copy(mStartData, position, newData);
 						std::uninitialized_copy(first, last, newData + INSERT_SIZE);
 						std::uninitialized_copy(position, mFinishData, newData + BEGIN_IDX + INSERT_SIZE);
 						if (mStartData.base())
-							allocator_type().deallocate(mStartData.base(), capacity());
+							mAllocator.deallocate(mStartData.base(), capacity());
 						mStartData = newData;
 						mEndOfStorage = mStartData + NEW_CAPACITY;
 					}
