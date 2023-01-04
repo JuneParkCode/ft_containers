@@ -64,7 +64,6 @@ namespace ft
 				mEndOfStorage = mStartData + count;
 				std::uninitialized_fill_n(mStartData, count, value);
 			}
-			// FIXME: vector<int> v (1, 2) -> goes here!!
 			template< class InputIt >
 			vector(InputIt first,
 				typename std::enable_if<!std::is_integral<InputIt>::value, InputIt>::type last,
