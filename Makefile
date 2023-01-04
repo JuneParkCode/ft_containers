@@ -6,7 +6,7 @@
 #    By: sungjpar <sungjpar@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/03/10 00:54:23 by sungjpar          #+#    #+#              #
-#    Updated: 2022/12/28 12:48:36 by sungjpar         ###   ########.fr        #
+#    Updated: 2023/01/04 16:34:54 by sungjpar         ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,16 +18,16 @@ ifdef SANITIZE
 	CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=address
 endif
 
-NAME = Fixed 
+NAME = container
 
 INC_DIR = ./include/
 
-SRC_DIR = ./src/
+SRC_DIR = ./source/
 
 INC_FLAG = -I$(INC_DIR)
 
 SRC_FILES = $(addprefix $(SRC_DIR),\
-						source/vector/vector.cpp\
+			test.cpp\
 			)
 
 OBJ = ${SRC_FILES:.cpp=.o}
