@@ -12,6 +12,7 @@ namespace ft
 	template <>				struct is_integral<signed char>			: public std::true_type {};
 	template <>				struct is_integral<unsigned char>		: public std::true_type {};
 	template <>				struct is_integral<wchar_t>				: public std::true_type {};
+	template <>				struct is_integral<char16_t>				: public std::true_type {};
 	template <>				struct is_integral<short>				: public std::true_type {};
 	template <>				struct is_integral<unsigned short> 		: public std::true_type {};
 	template <>				struct is_integral<int>					: public std::true_type {};
