@@ -3,11 +3,11 @@
 
 #include <algorithm>
 #include <exception>
-#include <iterator>
 #include <memory>
-#include <vector>
 #include "ft_iterator.hpp"
 #include "ft_config.hpp"
+#include "ft_stl_util.hpp"
+
 
 namespace ft
 {
@@ -66,7 +66,7 @@ namespace ft
 			}
 			template< class InputIt >
 			vector(InputIt first,
-				typename std::enable_if<!std::is_integral<InputIt>::value, InputIt>::type last,
+				typename std::enable_if<!ft::is_integral<InputIt>::value, InputIt>::type last,
 				const Allocator& alloc = Allocator()):
 					mStartData(0),
 					mFinishData(0),
@@ -76,7 +76,16 @@ namespace ft
 				mStartData = mAllocator.allocate(std::distance(first, last));
 				mFinishData = mStartData + std::distance(first, last);
 				mEndOfStorage = mFinishData;
-				std::uninitialized_copy(first, last, begin());
+				try
+				{
+					std::uninitialized_copy(first, last, begin());
+				}
+				catch (...)
+				{
+					ft::vector<T, Allocator> temp;
+					swap(temp);
+					throw ;
+				}
 			}
 			vector(const vector& other):
 					mStartData(0),
@@ -133,6 +142,15 @@ namespace ft
 			FT_INLINE size_type		max_size()	const FT_NOEXCEPT	{ return (std::min(size_type(-1) / sizeof(value_type), (size_type)std::numeric_limits<difference_type>::max())); }
 			FT_INLINE size_type		capacity()	const FT_NOEXCEPT	{ return (mEndOfStorage - mStartData); }
 			FT_INLINE bool			empty()		const FT_NOEXCEPT	{ return (size() == 0); }
+			FT_INLINE size_type 	newCapacity(size_type requiredSize) const FT_NOEXCEPT
+			{
+				if (!capacity())
+					return (requiredSize);
+				if (capacity() * 2 < requiredSize)
+					return (requiredSize);
+				else
+					return (capacity() * 2);
+			}
 			void					resize(size_type n, value_type val = value_type()) // it destroy stored data
 			{
 				if (n < size())
@@ -144,18 +162,19 @@ namespace ft
 				{
 					if (n > capacity())
 					{
-						pointer newData = mAllocator.allocate(n);
+						const size_type NEW_CAPACITY = newCapacity(n);
+						pointer newData = mAllocator.allocate(NEW_CAPACITY);
 						std::uninitialized_copy(mStartData, mFinishData, newData);
 						std::uninitialized_fill_n(newData + size(), n - size(), val);
 						mAllocator.deallocate(mStartData.base(), capacity());
 						mStartData = newData;
 						mFinishData = mStartData + n;
-						mEndOfStorage = mStartData + n;
+						mEndOfStorage = mStartData + NEW_CAPACITY;
 					}
 					else
 					{
-						std::uninitialized_fill_n(mFinishData, mFinishData + n, val);
-						mFinishData += n;
+						std::uninitialized_fill_n(mFinishData, n - size(), val);
+						mFinishData += n - size();
 					}
 				}
 			}
@@ -196,14 +215,23 @@ namespace ft
 			}
 			/** modifiers */
 			template <class InputIterator>
-			void							assign(InputIterator first, typename std::enable_if<!std::is_integral<InputIterator>::value, InputIterator>::type last)
+			void							assign(InputIterator first, typename std::enable_if<!ft::is_integral<InputIterator>::value, InputIterator>::type last)
 			{
 				// if overlapped in memory, it will be undefined behavior
 				const size_type SIZE = std::distance(first, last); 
 				this->clear();
 				this->reserve(SIZE);
-				std::uninitialized_copy(first, last, mStartData);
-				mFinishData = mStartData + SIZE;
+				try
+				{
+					std::uninitialized_copy(first, last, mStartData);
+					mFinishData = mStartData + SIZE;
+				}
+				catch (...)
+				{
+					ft::vector<T, Allocator> temp;
+					swap(temp);
+					throw ;
+				}
 			}
 			void							assign(size_type n, const value_type& val)
 			{
@@ -225,7 +253,7 @@ namespace ft
 			}
 			iterator						insert(iterator position, const value_type& val)
 			{
-				const size_type BEGIN_IDX = std::distance(begin(), position);
+				const size_type POSITION_IDX = std::distance(begin(), position);
 				const size_type NEW_SIZE = size() + 1;
 
 				if (NEW_SIZE > capacity())
@@ -237,12 +265,12 @@ namespace ft
 					}
 					else // reallocation
 					{
-						const size_type NEW_CAPACITY = capacity() * 2;
+						const size_type NEW_CAPACITY = newCapacity(NEW_SIZE);
 						pointer newData = mAllocator.allocate(NEW_CAPACITY);
 
 						std::uninitialized_copy(mStartData, position, newData);
-						newData[BEGIN_IDX] = val;
-						std::uninitialized_copy(position, mFinishData, newData + BEGIN_IDX);
+						newData[POSITION_IDX] = val;
+						std::uninitialized_copy(position, mFinishData, newData + POSITION_IDX + 1);
 						if (mStartData.base())
 							mAllocator.deallocate(mStartData.base(), capacity());
 						mStartData = newData;
@@ -252,17 +280,17 @@ namespace ft
 				}
 				else
 				{
-					std::copy_backward(position, mFinishData, position + 1);
-					mStartData[BEGIN_IDX] = val;
+					std::copy_backward(position, mFinishData, position + 1 + std::distance(position, mFinishData));
+					mStartData[POSITION_IDX] = val;
 					++mFinishData;
 				}
-				return (mStartData + BEGIN_IDX);
+				return (mStartData + POSITION_IDX);
 			}
 			iterator						insert(iterator position, size_type n, const value_type& val)
 			{
 				if (n == 0)
 					return (position);
-				const size_type BEGIN_IDX = std::distance(begin(), position);
+				const size_type POSITION_IDX = std::distance(begin(), position);
 				const size_type NEW_SIZE = size() + n;
 
 				if (NEW_SIZE > capacity())
@@ -274,12 +302,12 @@ namespace ft
 					}
 					else // reallocation
 					{
-						const size_type NEW_CAPACITY = capacity() * 2;
+						const size_type NEW_CAPACITY = newCapacity(NEW_SIZE);
 						pointer newData = mAllocator.allocate(NEW_CAPACITY);
 
 						std::uninitialized_copy(mStartData, position, newData);
-						std::uninitialized_fill_n(newData + BEGIN_IDX, n, val);
-						std::uninitialized_copy(position, mFinishData, newData + BEGIN_IDX + n);
+						std::uninitialized_fill_n(newData + POSITION_IDX, n, val);
+						std::uninitialized_copy(position, mFinishData, newData + POSITION_IDX + n);
 						if (mStartData.base())
 							mAllocator.deallocate(mStartData.base(), capacity());
 						mStartData = newData;
@@ -288,54 +316,61 @@ namespace ft
 				}
 				else
 				{
-					std::copy_backward(position, mFinishData, position + n);
+					std::copy_backward(position, mFinishData, position + n + std::distance(position, mFinishData));
 					std::uninitialized_fill_n(position, n, val);
 				}
 				mFinishData = mStartData + NEW_SIZE;
-				return (mStartData + BEGIN_IDX);
+				return (mStartData + POSITION_IDX);
 			
 			}
 			template <class InputIterator>
-			iterator						insert(iterator position, InputIterator first, InputIterator last)
+			iterator						insert(iterator position, InputIterator first, typename std::enable_if<!ft::is_integral<InputIterator>::value, InputIterator>::type last)
 			{
 				if (first == last)
 					return (position);
-				const size_type BEGIN_IDX = std::distance(begin(), position);
+				const size_type POSITION_IDX = std::distance(begin(), position);
 				const size_type INSERT_SIZE = std::distance(first, last);
 				const size_type NEW_SIZE = size() + INSERT_SIZE;
 
-				if (NEW_SIZE > capacity())
+				try
 				{
-					if (capacity() == 0)
+					if (!capacity())
 					{
 						this->reserve(NEW_SIZE);
+						(void) capacity();
 						std::uninitialized_copy(first, last, mStartData);
 					}
-					else // reallocation
+					else if (NEW_SIZE > capacity())
 					{
-						const size_type NEW_CAPACITY = capacity() * 2;
+						const size_type NEW_CAPACITY = newCapacity(NEW_SIZE);
 						pointer newData = mAllocator.allocate(NEW_CAPACITY);
 
 						std::uninitialized_copy(mStartData, position, newData);
-						std::uninitialized_copy(first, last, newData + INSERT_SIZE);
-						std::uninitialized_copy(position, mFinishData, newData + BEGIN_IDX + INSERT_SIZE);
+						std::uninitialized_copy(first, last, newData + POSITION_IDX);
+						std::uninitialized_copy(position, mFinishData, newData + POSITION_IDX + INSERT_SIZE);
 						if (mStartData.base())
 							mAllocator.deallocate(mStartData.base(), capacity());
 						mStartData = newData;
 						mEndOfStorage = mStartData + NEW_CAPACITY;
 					}
+					else
+					{
+						std::copy_backward(position, mFinishData, position + INSERT_SIZE + std::distance(position, mFinishData));
+						std::uninitialized_copy(first, last, position);
+					}
+					mFinishData = mStartData + NEW_SIZE;
 				}
-				else
+				catch (...)
 				{
-					std::copy_backward(position, mFinishData, position + INSERT_SIZE);
-					std::uninitialized_copy(first, last, position);
+					ft::vector<T, Allocator> temp;
+					swap(temp);
+					throw ;
 				}
-				mFinishData = mStartData + NEW_SIZE;
-				return (mStartData + BEGIN_IDX);
+				return (mStartData + POSITION_IDX);
 			}
 			iterator						erase(iterator position)
 			{
-				std::copy(position + 1, end(), position);
+				std::uninitialized_copy(position + 1, end(), position);
 				--mFinishData;
 				return (position);
 			}
@@ -364,11 +399,6 @@ namespace ft
 				mFinishData = mStartData;
 			}
 	};
-	template <class T, class Allocator>
-	void swap(vector<T, Allocator>& first, vector<T, Allocator>& second)
-	{
-		first.swap(second);
-	}
 	template <class T, class Allocator>
 	bool operator==(const vector<T, Allocator>& first, const vector<T, Allocator>& second)
 	{
@@ -411,6 +441,13 @@ namespace ft
 		return (first.empty() == second.empty());
 	}
 }
-
+namespace std
+{
+	template <class T, class Allocator>
+	void swap(ft::vector<T, Allocator>& first, ft::vector<T, Allocator>& second)
+	{
+		first.swap(second);
+	}
+}
 
 #endif
