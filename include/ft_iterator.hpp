@@ -38,8 +38,9 @@ namespace ft
 	{
 		private:
 			Iter mCurrent;
+			typedef pointer_iterator<Iter, Container>						_Self;
 		public:
-			typedef pointer_iterator<Iter, Container>						iterator_type;
+			typedef Iter													iterator_type;
 			typedef typename ft::iterator_traits<Iter>::iterator_category	iterator_category;
 			typedef typename ft::iterator_traits<Iter>::value_type			value_type;
 			typedef typename ft::iterator_traits<Iter>::difference_type		difference_type;
@@ -56,27 +57,39 @@ namespace ft
 		  	// forward iterator requirements
 			FT_INLINE  reference		operator*()		const FT_NOEXCEPT	{ return (*mCurrent); }
 			FT_INLINE  pointer			operator->()	const FT_NOEXCEPT	{ return (mCurrent); }
-			FT_INLINE  iterator_type&	operator++()	FT_NOEXCEPT			{ ++mCurrent; return (*this); }
-			FT_INLINE  iterator_type	operator++(int)	FT_NOEXCEPT			{ return (iterator_type(mCurrent++)); }
+			FT_INLINE  _Self&			operator++()	FT_NOEXCEPT			{ ++mCurrent; return (*this); }
+			FT_INLINE  _Self			operator++(int)	FT_NOEXCEPT			{ return (_Self(mCurrent++)); }
 			// bidirectional iterator requirements
-			FT_INLINE  iterator_type&	operator--()	FT_NOEXCEPT			{ --mCurrent; return *this; }
-			FT_INLINE  iterator_type	operator--(int)	FT_NOEXCEPT			{ return (iterator_type(mCurrent--)); }
+			FT_INLINE  _Self&			operator--()	FT_NOEXCEPT			{ --mCurrent; return *this; }
+			FT_INLINE  _Self			operator--(int)	FT_NOEXCEPT			{ return (_Self(mCurrent--)); }
 			// random access iterator requirements
 			FT_INLINE  reference		operator[](const difference_type& n)	const FT_NOEXCEPT	{ return (mCurrent[n]); }
-			FT_INLINE  iterator_type&	operator+=(const difference_type& n)	FT_NOEXCEPT			{ mCurrent += n; return (*this); }
-			FT_INLINE  iterator_type	operator+(const difference_type& n)		const FT_NOEXCEPT	{ return (iterator_type(mCurrent + n)); }
-			FT_INLINE  iterator_type&	operator-=(const difference_type& n)	FT_NOEXCEPT			{ mCurrent -= n; return (*this); }
-			FT_INLINE  iterator_type	operator-(const difference_type& n)		const FT_NOEXCEPT	{ return (iterator_type(mCurrent - n)); }
-			FT_INLINE  difference_type	operator-(const iterator_type& iter)	const				{ return (mCurrent - iter.mCurrent); }
-			FT_INLINE  bool				operator==(const iterator_type& iter)	const FT_NOEXCEPT	{ return (mCurrent == iter.mCurrent); }
-			FT_INLINE  bool				operator!=(const iterator_type& iter)	const FT_NOEXCEPT	{ return (mCurrent != iter.mCurrent); }
-			FT_INLINE  bool				operator<=(const iterator_type& iter)	const FT_NOEXCEPT	{ return (mCurrent <= iter.mCurrent); }
-			FT_INLINE  bool				operator>=(const iterator_type& iter)	const FT_NOEXCEPT	{ return (mCurrent >= iter.mCurrent); }
-			FT_INLINE  bool				operator<(const iterator_type& iter)	const FT_NOEXCEPT	{ return (mCurrent < iter.mCurrent); }
-			FT_INLINE  bool				operator>(const iterator_type& iter)	const FT_NOEXCEPT	{ return (mCurrent > iter.mCurrent); }
+			FT_INLINE  _Self&			operator+=(const difference_type& n)	FT_NOEXCEPT			{ mCurrent += n; return (*this); }
+			FT_INLINE  _Self			operator+(const difference_type& n)		const FT_NOEXCEPT	{ return (_Self(mCurrent + n)); }
+			FT_INLINE  _Self&			operator-=(const difference_type& n)	FT_NOEXCEPT			{ mCurrent -= n; return (*this); }
+			FT_INLINE  _Self			operator-(const difference_type& n)		const FT_NOEXCEPT	{ return (_Self(mCurrent - n)); }
+			FT_INLINE  difference_type	operator-(const _Self& iter)			const				{ return (mCurrent - iter.mCurrent); }
+			FT_INLINE  bool				operator==(const _Self& iter)			const FT_NOEXCEPT	{ return (mCurrent == iter.mCurrent); }
+			FT_INLINE  bool				operator!=(const _Self& iter)			const FT_NOEXCEPT	{ return (mCurrent != iter.mCurrent); }
+			FT_INLINE  bool				operator<=(const _Self& iter)			const FT_NOEXCEPT	{ return (mCurrent <= iter.mCurrent); }
+			FT_INLINE  bool				operator>=(const _Self& iter)			const FT_NOEXCEPT	{ return (mCurrent >= iter.mCurrent); }
+			FT_INLINE  bool				operator<(const _Self& iter)			const FT_NOEXCEPT	{ return (mCurrent < iter.mCurrent); }
+			FT_INLINE  bool				operator>(const _Self& iter)			const FT_NOEXCEPT	{ return (mCurrent > iter.mCurrent); }
 			FT_INLINE  const Iter& 		base()									const FT_NOEXCEPT	{ return (mCurrent); }
 			
 	};
+	template <class Iter, class Container>
+	FT_INLINE  pointer_iterator<Iter, Container>	operator+(const pointer_iterator<Iter, Container>& iter, const typename ft::iterator_traits<Iter>::difference_type& n)	FT_NOEXCEPT
+	{ return (pointer_iterator<Iter, Container>(iter.base() + n)); }
+	template <class Iter, class Container>
+	FT_INLINE  pointer_iterator<Iter, Container>	operator-(const pointer_iterator<Iter, Container>& iter, const typename ft::iterator_traits<Iter>::difference_type& n)	FT_NOEXCEPT
+	{ return (pointer_iterator<Iter, Container>(iter.base() - n)); }
+	template <class Iter, class Container>
+	FT_INLINE  pointer_iterator<Iter, Container>	operator+(const typename ft::iterator_traits<Iter>::difference_type& n, const pointer_iterator<Iter, Container>& iter)	FT_NOEXCEPT
+	{ return (pointer_iterator<Iter, Container>(iter.base() + n)); }
+	template <class Iter, class Container>
+	FT_INLINE  pointer_iterator<Iter, Container>	operator-(const typename ft::iterator_traits<Iter>::difference_type& n, const pointer_iterator<Iter, Container>& iter)	FT_NOEXCEPT
+	{ return (pointer_iterator<Iter, Container>(iter.base() - n)); }
 }
 /** reverse iterator */
 namespace ft
@@ -134,10 +147,10 @@ namespace ft
 	bool	operator<(const ft::reverse_iterator<Iterator1>& lhs, const ft::reverse_iterator<Iterator2>& rhs)	{ return (lhs.base() > rhs.base()); }
 	template <class Iter>
 	reverse_iterator<Iter>
-			operator+(typename reverse_iterator<Iter>::difference_type n, const reverse_iterator<Iter>& it)		{ return (it.base() - n); }
+			operator+(typename reverse_iterator<Iter>::difference_type n, const reverse_iterator<Iter>& it)		{ return (reverse_iterator<Iter>(it.base() - n)); }
 	template <class Iter>
 	reverse_iterator<Iter>
-			operator-(typename reverse_iterator<Iter>::difference_type n, const reverse_iterator<Iter>& it)		{ return (it.base() + n); }
+			operator-(typename reverse_iterator<Iter>::difference_type n, const reverse_iterator<Iter>& it)		{ return (reverse_iterator<Iter>(it.base() + n)); }
 	template <class Iter>
 	typename reverse_iterator<Iter>::difference_type
 			operator-(const reverse_iterator<Iter>& first, const reverse_iterator<Iter>& second)				{ return (second.base() - first.base()); }
