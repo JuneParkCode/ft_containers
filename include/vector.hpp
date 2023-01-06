@@ -321,7 +321,6 @@ namespace ft
 				}
 				mFinishData = mStartData + NEW_SIZE;
 				return (mStartData + POSITION_IDX);
-			
 			}
 			template <class InputIterator>
 			iterator						insert(iterator position, InputIterator first, typename std::enable_if<!ft::is_integral<InputIterator>::value, InputIterator>::type last)
@@ -402,43 +401,41 @@ namespace ft
 	template <class T, class Allocator>
 	bool operator==(const vector<T, Allocator>& first, const vector<T, Allocator>& second)
 	{
-		if (first.size() != second.size())
+		if (first.empty() && second.empty())
+			return (true);
+		else if (first.empty() || second.empty())
 			return (false);
-		typename vector<T, Allocator>::const_iterator firstIt = first.begin();
-		typename vector<T, Allocator>::const_iterator secondIt = second.begin();
-
-		for (; firstIt != first.end() && secondIt != second.end(); ++firstIt, ++secondIt)
-		{
-			if (*firstIt != *secondIt)
-				return (false);
-		}
-		return (true);
+		return (ft::equal(first.begin(), first.end(), second.begin()));
 	}
 	// below functions use std::lexicographical_compare.
 	template <class T, class Allocator>
 	bool operator!=(const vector<T, Allocator>& first, const vector<T, Allocator>& second)
 	{
-		return (first.empty() == second.empty());
+		if (first.empty() && second.empty())
+			return (false);
+		else if (first.empty() || second.empty())
+			return (true);
+		return (!ft::equal(first.begin(), first.end(), second.begin()));
 	}
 	template <class T, class Allocator>
 	bool operator<(const vector<T, Allocator>& first, const vector<T, Allocator>& second)
 	{
-		return (first.empty() == second.empty());
+		return (ft::lexicographical_compare(first.begin(), first.end(), second.begin(), second.end()));
 	}
 	template <class T, class Allocator>
 	bool operator<=(const vector<T, Allocator>& first, const vector<T, Allocator>& second)
 	{
-		return (first.empty() == second.empty());
+		return (!(second < first));
 	}
 	template <class T, class Allocator>
 	bool operator>(const vector<T, Allocator>& first, const vector<T, Allocator>& second)
 	{
-		return (first.empty() == second.empty());
+		return (second < first);
 	}
 	template <class T, class Allocator>
 	bool operator>=(const vector<T, Allocator>& first, const vector<T, Allocator>& second)
 	{
-		return (first.empty() == second.empty());
+		return (!(first < second));
 	}
 }
 namespace std
