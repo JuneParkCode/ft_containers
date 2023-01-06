@@ -1,7 +1,6 @@
 #ifndef ft_iterator
 #define ft_iterator
 
-#include <cstddef>
 #include <iterator>
 #include <memory>
 #include <vector>
@@ -182,7 +181,124 @@ namespace ft
 			bst_iterator(const bst_iterator<U>& it) : mCurrent(it.base()) {}
 			template<typename U> // const iterator conversion
 			node_type&					operator=(const bst_iterator<U>& it) { mCurrent = it.base(); return (*this); }
+		protected:
+			/** NOTE: BELOW FUNCTIONS MUST BE TESTED */
+			FT_INLINE  void				increment() FT_NOEXCEPT
+			{
+				// find next larger element
+				if (mCurrent->rChild)
+				{
+					mCurrent = mCurrent->rChild;
+					// children is larger than previous node 
+					while (mCurrent->lChild)
+					{
+						mCurrent = mCurrent->lChild;
+					}
+				}
+				// children is not larger than previous node.
+				else
+				{
+					// go to parent until parent > current
+					node_type parent = mCurrent->parent;
+					while (parent && mCurrent == parent->rChild) // parent < current
+					{
+						mCurrent = parent;
+						parent = mCurrent->parent;
+					}
+					if (!parent || parent->lChild == mCurrent) // parent is next node
+						mCurrent = parent;
+				}
+			}
+			FT_INLINE  void				decrement() FT_NOEXCEPT
+			{
+				// find largest element that smaller than current elemnet
+				if (mCurrent->lChild)
+				{
+					mCurrent = mCurrent->lChild;
+					// children is smaller than previous node 
+					while (mCurrent->rChild) // find right-most node of left tree
+					{
+						mCurrent = mCurrent->rChild;
+					}
+				}
+				else
+				{
+					// go to parent until parent < current
+					node_type parent = mCurrent->parent;
+					while (parent && mCurrent == parent->lChild) // parent > current
+					{
+						mCurrent = parent;
+						parent = mCurrent->parent;
+					}
+					if (!parent || parent->rChild == mCurrent) // parent is next node
+						mCurrent = parent;
+				}
+			}
+		public:
+		  	// forward iterator requirements
+			FT_INLINE  reference		operator*()		const FT_NOEXCEPT
+			{
+				return (*mCurrent);
+			}
+			FT_INLINE  pointer			operator->()	const FT_NOEXCEPT
+			{
+				return (mCurrent);
+			}
+			FT_INLINE  _Self&			operator++()	FT_NOEXCEPT		
+			{
+				increment();
+				return (*this);
+			}
+			FT_INLINE  _Self			operator++(int)	FT_NOEXCEPT		
+			{
+				_Self tmp(*this);
+
+				increment();
+				return (tmp);
+			}
+			// bidirectional iterator requirements
+			FT_INLINE  _Self&			operator--()	FT_NOEXCEPT		
+			{
+				decrement();
+				return *this;
+			}
+			FT_INLINE  _Self			operator--(int)	FT_NOEXCEPT		
+			{
+				_Self tmp(*this);
+
+				decrement();
+				return (tmp);
+			}
+			FT_INLINE  bool				operator==(const _Self& iter)	const FT_NOEXCEPT	{ return (mCurrent == iter.mCurrent); }
+			FT_INLINE  bool				operator!=(const _Self& iter)	const FT_NOEXCEPT	{ return (mCurrent != iter.mCurrent); }
+			FT_INLINE  const node_type& base()							const FT_NOEXCEPT	{ return (mCurrent); }
+	};
+
+	template <class NodeType>
+	class const_bst_iterator
+	{
 		private:
+			NodeType* 											mCurrent;
+			typedef NodeType									node_type;
+			typedef bst_iterator<NodeType>						_Self;
+		public:
+			typedef NodeType									value_type;
+			typedef typename std::bidirectional_iterator_tag	iterator_category;
+			typedef ptrdiff_t									difference_type;
+			typedef	const value_type*							pointer;
+			typedef const value_type&							reference;
+		public:
+			const_bst_iterator() : mCurrent() {};
+			const_bst_iterator(const node_type& node) : mCurrent(node) {}
+			template<typename U> // const iterator conversion
+			const_bst_iterator(const const_bst_iterator<U>& it) : mCurrent(it.base()) {}
+			template<typename U> // const iterator conversion
+			const_bst_iterator(const bst_iterator<U>& it) : mCurrent(it.base()) {}
+			template<typename U> // const iterator conversion
+			node_type&					operator=(const const_bst_iterator<U>& it) { mCurrent = it.base(); return (*this); }
+			template<typename U> // const iterator conversion
+			node_type&					operator=(const bst_iterator<U>& it) { mCurrent = it.base(); return (*this); }
+		protected:
 			/** NOTE: BELOW FUNCTIONS MUST BE TESTED */
 			FT_INLINE  void				increment() FT_NOEXCEPT
 			{
