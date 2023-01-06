@@ -53,23 +53,26 @@ namespace ft
 			using _Container_type::size;
 			using _Container_type::empty;
 			/** element access (NOEXCEPT!!) */
-			FT_INLINE reference				top()		FT_NOEXCEPT					{ return (this->back()); }
-			FT_INLINE const_reference		top()		const						{ return (this->back()); }			/** modifiers */
-			void							push(const value_type& val)				{ this->push_back(val); }
-			void							pop()									{ this->pop_back(); }
-		template <class T1, class Container1>
-		friend bool operator==(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
-		template <class T1, class Container1>
-		friend bool operator!=(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
-		template <class T1, class Container1>
-		friend bool operator>=(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
-		template <class T1, class Container1>
-		friend bool operator<=(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
-		template <class T1, class Container1>
-		friend bool operator<(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
-		template <class T1, class Container1>
-		friend bool operator>(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
+			FT_INLINE reference				top()		FT_NOEXCEPT			{ return (this->back()); }
+			FT_INLINE const_reference		top()		const FT_NOEXCEPT	{ return (this->back()); }
+			/** modifiers  */
+			void							push(const value_type& val)		{ this->push_back(val); }
+			void							pop()							{ this->pop_back(); }
+			/** friend operators  */
+			template <class T1, class Container1>
+			friend bool operator==(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
+			template <class T1, class Container1>
+			friend bool operator!=(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
+			template <class T1, class Container1>
+			friend bool operator>=(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
+			template <class T1, class Container1>
+			friend bool operator<=(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
+			template <class T1, class Container1>
+			friend bool operator<(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
+			template <class T1, class Container1>
+			friend bool operator>(const stack<T1, Container1>& first, const stack<T1, Container1>& second);
 	};
+	/** compare operator definition */
 	template <class T, class Container>
 	bool operator==(const stack<T, Container>& first, const stack<T, Container>& second)	{ return (first.mContainer == second.mContainer); }
 	template <class T, class Container>
