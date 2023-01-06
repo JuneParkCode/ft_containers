@@ -32,7 +32,7 @@ namespace ft
 			typedef typename ft::reverse_iterator<const_iterator>			const_reverse_iterator;
 
 		/** member variables  */
-		private:
+		protected:
 			iterator 		mStartData;
 			iterator		mFinishData;
 			iterator		mEndOfStorage;
@@ -125,7 +125,7 @@ namespace ft
 			const_iterator			cend()		const FT_NOEXCEPT	{ return (const_iterator(mFinishData)); }
 			const_reverse_iterator	crbegin()	const FT_NOEXCEPT	{ return (const_reverse_iterator(mStartData)); }
 			const_reverse_iterator	crend()		const FT_NOEXCEPT	{ return (const_reverse_iterator(mStartData)); }
-		private:
+		protected:
 			/** helper */
 			template <class Iter>
 			void destroy(Iter first, Iter last)
