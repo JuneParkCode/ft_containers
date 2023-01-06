@@ -195,9 +195,9 @@ namespace ft
 			FT_INLINE reference				operator[](int idx)	FT_NOEXCEPT			{ return (mStartData[idx]); }
 			FT_INLINE const_reference		operator[](int idx) const FT_NOEXCEPT	{ return (mStartData[idx]); }
 			FT_INLINE reference				front()				FT_NOEXCEPT			{ return (mStartData[0]); }
-			FT_INLINE const_reference		front() 			const				{ return (mStartData[0]); }
+			FT_INLINE const_reference		front() 			const FT_NOEXCEPT	{ return (mStartData[0]); }
 			FT_INLINE reference				back()				FT_NOEXCEPT			{ return (*(mFinishData - 1)); }
-			FT_INLINE const_reference		back()				const				{ return (*(mFinishData - 1)); }
+			FT_INLINE const_reference		back()				const FT_NOEXCEPT	{ return (*(mFinishData - 1)); }
 			FT_INLINE const pointer			data()				const FT_NOEXCEPT	{ return (mStartData); }
 			FT_INLINE pointer				data()				FT_NOEXCEPT			{ return (mStartData); }
 			/** at() throws exception...  */
