@@ -235,12 +235,56 @@ namespace ft
 			//  lookup
 			size_type								count(const Key& key) const
 			{
+				if (find(key) == end())
+					return (0);
+				else
+					return (1);
 			}
 			iterator								find(const Key& key)
 			{
+				link_type node = root();
+
+				if (node == mHeader)
+					return (end());
+				while (node)
+				{
+					if (key_compare(key, node->value.first)) // key < node
+					{
+						node = node->left;
+					}
+					else if (key_compare(node->value.first, key)) // key > node
+					{
+						node = node->right;
+					}
+					else
+					{
+						return (iterator(node));
+					}
+				}
+				return (end());
 			}
 			const_iterator							find(const Key& key) const
 			{
+				link_type node = root();
+
+				if (node == mHeader)
+					return (end());
+				while (node)
+				{
+					if (key_compare(key, node->value.first)) // key < node
+					{
+						node = node->left;
+					}
+					else if (key_compare(node->value.first, key)) // key > node
+					{
+						node = node->right;
+					}
+					else
+					{
+						return (const_iterator(node));
+					}
+				}
+				return (end());
 			}
 	};
 }
