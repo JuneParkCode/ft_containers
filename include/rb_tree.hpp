@@ -108,7 +108,7 @@ namespace ft
 			{
 				return (mHeader->right);
 			}
-			link_type	findNodePosition(const value_type& val)
+			link_type	findNodeParent(const value_type& val)
 			{
 				link_type node = root();
 				
@@ -130,29 +130,145 @@ namespace ft
 					}
 					else
 					{
-						return (NULL);
+						return (mHeader);
 					}
 				}
 			}
-			link_type grandparent(link_type n)
+			// TODO: UNDERSTAND THIS CODE!!!
+			static void rotateLeft(_Self* node)
 			{
-				if ((n != NULL) && (n->parent != NULL))
-					return n->parent->parent;
+				_Self* child = node->right;
+				_Self* parent = node->parent;
+
+				if (child->left != NULL)
+					child->left->parent = node;
+
+				node->right = child->left;
+				node->parent = child;
+				child->left = node;
+				child->parent = parent;
+
+				if (parent != NULL) {
+					if (parent->left == node)
+						parent->left = child;
+					else
+						parent->right = child;
+				}
+			}
+			static void rotateRight(_Self* node)
+			{
+				_Self* child = node->left;
+				_Self* parent = node->parent;
+
+				if (child->right != NULL)
+					child->right->parent = node;
+
+				node->left = child->right;
+				node->parent = child;
+				child->right = node;
+				child->parent = parent;
+
+				if (parent != NULL) {
+					if (parent->right == node)
+						parent->right = child;
+					else
+						parent->left = child;
+				}
+			}
+			link_type grandparent(link_type node)
+			{
+				if ((node != NULL) && (node->parent != NULL))
+					return node->parent->parent;
 				else
 					return NULL;
 			}
 			link_type uncle(link_type n)
 			{
-				link_type g = grandparent(n);
-				if (g == NULL)
+				link_type grandParent = grandparent(n);
+				if (grandParent == NULL)
 					return NULL; // No grandparent means no uncle
-				if (n->parent == g->left)
-					return g->right;
+				if (n->parent == grandParent->left)
+					return grandParent->right;
 				else
-					return g->left;
+					return grandParent->left;
 			}
+			// case 1 if parent is root
+			ft::pair<iterator, bool> insertCase1(link_type node)
+			{
+				if (node->parent == mHeader)
+					return (ft::pair<iterator, bool>(iterator(node), true));
+				insertCase2(node);
+			}
+			// case 2 if parent is black
+			ft::pair<iterator, bool> insertCase2(link_type node)
+			{
+				if (node->parent->color == BLACK)
+					return (ft::pair<iterator, bool>(iterator(node), true));
+				insertCase3(node);
+			}
+			// case 3 if parent is red and uncle is red
+			ft::pair<iterator, bool> insertCase3(link_type node)
+			{
+				link_type uncle = uncle(node);
+				link_type granParent;
+
+				if (uncle && uncle->color == RED)
+				{
+					node->parent->color = BLACK;
+					uncle->color = BLACK;
+					granParent = grandparent(node);
+					granParent->color = RED;
+					insert_case1(granParent);
+				}
+				else
+				{
+					insertCase4(node);
+				}
+			}
+			// case 4 if parent is red and uncle is black
+			ft::pair<iterator, bool> insertCase4(link_type node)
+			{
+				link_type *grandParent = grandparent(node);
+
+				if ((node == node->parent->right) && (node->parent == grandParent->left))
+				{
+					rotate_left(node->parent);
+					node = node->left;
+				}
+				else if ((node == node->parent->left) && (node->parent == grandParent->right))
+				{
+					rotate_right(node->parent);
+					node = node->right;
+				}
+				insertCase5(node);
+			}
+			// case 5 if parent is right of grand parent -> left rotaion
+			ft::pair<iterator, bool> insertCase5(link_type node)
+			{
+				link_type grandParent = grandparent(node);
+
+				node->parent->color = BLACK;
+				grandParent->color = RED;
+				if (node == node->parent->left)
+					rotateRight(grandParent);
+				else
+					rotateLeft(grandParent);
+			}
+			// insertion node
 			ft::pair<iterator, bool> insert_unique(const value_type& value)
 			{
+				// first, add node to leaf node
+				link_type newNode = getNode();
+				link_type parent = findNodeParent(value);
+
+				newNode->color = RED;
+				newNode->value = value;
+				newNode->parent = parent;
+				if (parent == mHeader || key_compare(parent->value, value)) // root case or left child
+					parent->left = newNode;
+				else // right child
+					parent->right = newNode;
+				return (insertCase1(newNode));
 			}
 		public:
 			_rb_tree();
@@ -160,17 +276,17 @@ namespace ft
 			_rb_tree(key_compare comp, allocator_type& alloc);
 		public:
 			//  iterators
-			iterator								begin()		FT_NOEXCEPT							{ return (iterator(leftMost())); }
-			const_iterator							begin()		const FT_NOEXCEPT					{ return (const_iterator(leftMost())); }
-			iterator								end()		FT_NOEXCEPT							{ return (iterator(mHeader)); }
-			const_iterator							end()		const FT_NOEXCEPT					{ return (iterator(mHeader)); }
-			reverse_iterator						rbegin()	FT_NOEXCEPT							{ return (reverse_iterator(end())); }
-			const_reverse_iterator					rbegin()	const FT_NOEXCEPT					{ return (const_reverse_iterator(end())); }
-			reverse_iterator						rend()		FT_NOEXCEPT							{ return (reverse_iterator(begin())); }
-			const_reverse_iterator					rend()		const FT_NOEXCEPT					{ return (const_reverse_iterator(begin())); }
+			iterator								begin()		FT_NOEXCEPT			{ return (iterator(leftMost())); }
+			const_iterator							begin()		const FT_NOEXCEPT	{ return (const_iterator(leftMost())); }
+			iterator								end()		FT_NOEXCEPT			{ return (iterator(mHeader)); }
+			const_iterator							end()		const FT_NOEXCEPT	{ return (iterator(mHeader)); }
+			reverse_iterator						rbegin()	FT_NOEXCEPT			{ return (reverse_iterator(end())); }
+			const_reverse_iterator					rbegin()	const FT_NOEXCEPT	{ return (const_reverse_iterator(end())); }
+			reverse_iterator						rend()		FT_NOEXCEPT			{ return (reverse_iterator(begin())); }
+			const_reverse_iterator					rend()		const FT_NOEXCEPT	{ return (const_reverse_iterator(begin())); }
 			//  capacity
-			FT_INLINE bool							empty()		const FT_NOEXCEPT					{ return (mCurrentSize == 0); }
-			FT_INLINE size_type						size()		const FT_NOEXCEPT					{ return (mCurrentSize); }
+			FT_INLINE bool							empty()		const FT_NOEXCEPT	{ return (mCurrentSize == 0); }
+			FT_INLINE size_type						size()		const FT_NOEXCEPT	{ return (mCurrentSize); }
 			//  modifiers
 			void									clear()
 			{
@@ -178,9 +294,6 @@ namespace ft
 			}
 			ft::pair<iterator, bool>				insert(const value_type& value)
 			{
-				link_type node = findNodePosition(value);
-				if (node == NULL) // has equal content
-					return (ft::pair<iterator, bool>(iterator(value), false));
 				return (insert_unique(value));
 			}
 			// ignore hint
