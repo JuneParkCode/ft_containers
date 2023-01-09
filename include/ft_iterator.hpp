@@ -238,11 +238,11 @@ namespace ft
 		  	// forward iterator requirements
 			FT_INLINE  reference		operator*()		const FT_NOEXCEPT
 			{
-				return (*mCurrent);
+				return (mCurrent->value);
 			}
 			FT_INLINE  pointer			operator->()	const FT_NOEXCEPT
 			{
-				return (mCurrent);
+				return (&(mCurrent->value));
 			}
 			FT_INLINE  _Self&			operator++()	FT_NOEXCEPT		
 			{
@@ -355,11 +355,11 @@ namespace ft
 		  	// forward iterator requirements
 			FT_INLINE  reference		operator*()		const FT_NOEXCEPT
 			{
-				return (*mCurrent);
+				return (mCurrent->value);
 			}
 			FT_INLINE  pointer			operator->()	const FT_NOEXCEPT
 			{
-				return (mCurrent);
+				return (&(mCurrent->value));
 			}
 			FT_INLINE  _Self&			operator++()	FT_NOEXCEPT		
 			{
