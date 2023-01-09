@@ -8,6 +8,127 @@
 #include "ft_config.hpp"
 #include "ft_stl_util.hpp"
 
+/**
+ * 
+ * ft::vector
+ * 
+ * 
+namespace ft
+{
+	template <class T, class Allocator = std::allocator<T> >
+	class vector
+	{
+		public:
+			//  type define 
+			typedef T			value_type;
+			typedef Allocator	allocator_type;
+			// type define related with allocator
+			typedef typename allocator_type::size_type 			size_type;
+			typedef typename allocator_type::difference_type	difference_type;
+			typedef value_type&									reference;
+			typedef const value_type&							const_reference;
+			typedef value_type*									pointer;
+			typedef const value_type*							const_pointer;
+			//  iterator types
+			typedef pointer_iterator<pointer, vector<T, Allocator> >		iterator;
+			typedef typename ft::reverse_iterator<iterator>					reverse_iterator;
+			typedef pointer_iterator<const_pointer, vector<T, Allocator> >	const_iterator;
+			typedef typename ft::reverse_iterator<const_iterator>			const_reverse_iterator;
+
+		//member variables  
+		protected:
+			iterator 		mStartData;
+			iterator		mFinishData;
+			iterator		mEndOfStorage;
+			allocator_type	mAllocator;
+		// constructor. destructors 
+		public:
+			vector();
+			explicit vector(const Allocator& alloc);
+			explicit vector( size_type count, const T& value = T(), const Allocator& alloc = Allocator());
+			template <class InputIt>
+			vector(InputIt first,
+				typename std::enable_if<!ft::is_integral<InputIt>::value, InputIt>::type last, const Allocator& alloc = Allocator());
+			vector(const vector& other);
+			~vector();
+			vector& operator=(const vector<T>& rhs);
+			FT_INLINE allocator_type get_allocator() const FT_NOEXCEPT;
+		//  iterators
+			iterator				begin()		FT_NOEXCEPT;
+			const_iterator			begin()		const FT_NOEXCEPT;
+			iterator				end()		FT_NOEXCEPT;
+			const_iterator			end()		const FT_NOEXCEPT;
+			reverse_iterator		rbegin();
+			const_reverse_iterator	rbegin()	const;
+			reverse_iterator		rend()		FT_NOEXCEPT;
+			const_reverse_iterator	rend()		const FT_NOEXCEPT;
+			const_iterator			cbegin()	const FT_NOEXCEPT;
+			const_iterator			cend()		const FT_NOEXCEPT;
+			const_reverse_iterator	crbegin()	const FT_NOEXCEPT;
+			const_reverse_iterator	crend()		const FT_NOEXCEPT;
+		protected:
+			//  helper
+			template <class Iter>
+			void destroy(Iter first, Iter last);
+		//  member functions
+		public:
+			//  capacity
+			FT_INLINE size_type		size() 		const FT_NOEXCEPT;
+			FT_INLINE size_type		max_size()	const FT_NOEXCEPT;
+			FT_INLINE size_type		capacity()	const FT_NOEXCEPT;
+			FT_INLINE bool			empty()		const FT_NOEXCEPT;
+			FT_INLINE size_type 	newCapacity(size_type requiredSize) const FT_NOEXCEPT;
+			void					resize(size_type n, value_type val = value_type();
+			void					reserve(size_type n);
+			//  element access (NOEXCEPT!!)
+			FT_INLINE reference				operator[](int idx)	FT_NOEXCEPT;
+			FT_INLINE const_reference		operator[](int idx) const FT_NOEXCEPT;
+			FT_INLINE reference				front()				FT_NOEXCEPT;
+			FT_INLINE const_reference		front() 			const FT_NOEXCEPT;
+			FT_INLINE reference				back()				FT_NOEXCEPT;
+			FT_INLINE const_reference		back()				const FT_NOEXCEPT;
+			FT_INLINE const pointer			data()				const FT_NOEXCEPT;
+			FT_INLINE pointer				data()				FT_NOEXCEPT	;
+			//  at() throws exception...
+			reference						at(size_type n);
+			const_reference					at(size_type n) const;
+			// / modifiers 
+			template <class InputIterator>
+			void							assign(InputIterator first, typename std::enable_if<!ft::is_integral<InputIterator>::value, InputIterator>::type last);
+			void							assign(size_type n, const value_type& val);
+			void							push_back(const value_type& val);
+			void							pop_back();
+			iterator						insert(iterator position, const value_type& val);
+			iterator						insert(iterator position, size_type n, const value_type& val);
+			template <class InputIterator>
+			iterator						insert(iterator position, InputIterator first, typename std::enable_if<!ft::is_integral<InputIterator>::value, InputIterator>::type last);
+			iterator						erase(iterator position);
+			iterator						erase(iterator first, iterator last);
+			FT_INLINE void					swap(vector& x) FT_NOEXCEPT;
+			void							clear();
+	};
+	template <class T, class Allocator>
+	bool operator==(const vector<T, Allocator>& first, const vector<T, Allocator>& second);
+	template <class T, class Allocator>
+	bool operator!=(const vector<T, Allocator>& first, const vector<T, Allocator>& second);
+	template <class T, class Allocator>
+	bool operator<(const vector<T, Allocator>& first, const vector<T, Allocator>& second);
+	template <class T, class Allocator>
+	bool operator<=(const vector<T, Allocator>& first, const vector<T, Allocator>& second);
+	template <class T, class Allocator>
+	bool operator>(const vector<T, Allocator>& first, const vector<T, Allocator>& second);
+	template <class T, class Allocator>
+	bool operator>=(const vector<T, Allocator>& first, const vector<T, Allocator>& second);
+}
+namespace std
+{
+	template <class T, class Allocator>
+	void swap(ft::vector<T, Allocator>& first, ft::vector<T, Allocator>& second);
+}
+
+#endif
+* 
+*/
 
 namespace ft
 {
