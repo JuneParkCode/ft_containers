@@ -4,6 +4,7 @@
 #include "ft_iterator.hpp"
 #include "ft_pair.hpp"
 #include <cstddef>
+#include <memory>
 
 namespace ft
 {
@@ -78,6 +79,24 @@ namespace ft
 			link_type		mHeader;
 			size_type		mCurrentSize;
 			allocator_type	mAllocator;
+			key_compare		mCompare;
+		public:
+			_rb_tree() : 
+				mHeader(), mCurrentSize(0), mAllocator(std::allocator<value_type>()), mCompare()
+			{
+				mHeader = getNode();
+				mCompare = key_compare();
+			}
+			_rb_tree(const _Self& other) : 
+				mHeader(), mCurrentSize(other.size()), mAllocator(other.mAllocator), mCompare()
+			{
+				*this = other;
+			}
+			_rb_tree(key_compare comp, allocator_type& alloc) : 
+				mHeader(), mCurrentSize(0), mAllocator(alloc), mCompare(comp)
+			{
+				mHeader = getNode();
+			}
 		private:
 			void destroy(link_type node)
 			{
@@ -108,9 +127,9 @@ namespace ft
 			{
 				return (mHeader->right);
 			}
-			link_type	findNodeParent(const value_type& val)
+			link_type	findNodeParent(iterator hint, const value_type& val)
 			{
-				link_type node = root();
+				link_type node = (--hint).base();
 				
 				while (node)
 				{
@@ -133,6 +152,8 @@ namespace ft
 						return (mHeader);
 					}
 				}
+				if (hint != begin())
+					return (++begin(), val); // find from root
 			}
 			// TODO: UNDERSTAND THIS CODE!!!
 			static void rotateLeft(_Self* node)
@@ -148,7 +169,8 @@ namespace ft
 				child->left = node;
 				child->parent = parent;
 
-				if (parent != NULL) {
+				if (parent != NULL)
+				{
 					if (parent->left == node)
 						parent->left = child;
 					else
@@ -168,7 +190,8 @@ namespace ft
 				child->right = node;
 				child->parent = parent;
 
-				if (parent != NULL) {
+				if (parent != NULL)
+				{
 					if (parent->right == node)
 						parent->right = child;
 					else
@@ -178,19 +201,26 @@ namespace ft
 			link_type grandparent(link_type node)
 			{
 				if ((node != NULL) && (node->parent != NULL))
-					return node->parent->parent;
+					return (node->parent->parent);
 				else
-					return NULL;
+					return (NULL);
 			}
-			link_type uncle(link_type n)
+			link_type uncle(link_type node)
 			{
-				link_type grandParent = grandparent(n);
+				link_type grandParent = grandparent(node);
 				if (grandParent == NULL)
-					return NULL; // No grandparent means no uncle
-				if (n->parent == grandParent->left)
-					return grandParent->right;
+					return (NULL); // No grandparent means no uncle
+				if (node->parent == grandParent->left)
+					return (grandParent->right);
 				else
-					return grandParent->left;
+					return (grandParent->left);
+			}
+			link_type sibling(link_type node)
+			{
+				if (node == node->parent->left)
+					return node->parent->right;
+				else
+					return node->parent->left;
 			}
 			// case 1 if parent is root
 			ft::pair<iterator, bool> insertCase1(link_type node)
@@ -255,10 +285,10 @@ namespace ft
 					rotateLeft(grandParent);
 			}
 			// insertion node
-			ft::pair<iterator, bool> insert_unique(const value_type& value)
+			ft::pair<iterator, bool> insertUnique(iterator hint, const value_type& value)
 			{
 				// first, add node to leaf node
-				link_type newNode = getNode();
+				link_type newNode = getNode(hint);
 				link_type parent = findNodeParent(value);
 
 				newNode->color = RED;
@@ -270,10 +300,48 @@ namespace ft
 					parent->right = newNode;
 				return (insertCase1(newNode));
 			}
-		public:
-			_rb_tree();
-			_rb_tree(const _Self& other);
-			_rb_tree(key_compare comp, allocator_type& alloc);
+			bool isLeaf(link_type node) { return (!node->left && !node->right); }
+			void replaceNode(link_type node, link_type child)
+			{
+				child->parent = node->parent;
+				if (node->parent == mHeader)
+					node->parent->parent = child; // set to root
+				else if (node->parent->left == node)
+					node->parent->left = child;
+				else if (node->parent ->right == node)
+					node->parent->right = child;
+			}
+			// delete node and rebalance
+			// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+			void eraseRebalance(iterator pos)
+			{
+				link_type node = pos.base();
+
+				if (!node->left && !node->right) // node is leaf
+				{
+					if (node == root())
+					{
+						mHeader->parent = NULL;
+						mHeader->left = NULL;
+						mHeader->right = NULL;
+					}
+					else if (node->parent->left == node)
+					{
+						node->parent->left = NULL;
+					}
+					else
+					{
+						node->parent->right = NULL;
+					}
+					destroy(node);
+					--mCurrentSize;
+					return ;
+				}
+				else
+				{
+					
+				}
+			}
 		public:
 			//  iterators
 			iterator								begin()		FT_NOEXCEPT			{ return (iterator(leftMost())); }
@@ -294,26 +362,24 @@ namespace ft
 			}
 			ft::pair<iterator, bool>				insert(const value_type& value)
 			{
-				return (insert_unique(value));
+				return (insertUnique(++root(), value));
 			}
 			// ignore hint
 			iterator								insert(iterator hint, const value_type& value)
 			{
-				(void) hint;
-				insert(value);
+				insertUnique(hint, value);
 			}
 			template< class InputIt >
 			void									insert(InputIt first, InputIt last)
 			{
 				for (; first != last; ++first)
 				{
-					insert(*first);
+					insertUnique(++root(), *first);
 				}
 			}
 			void									erase(iterator pos)
 			{
-				link_type node = &(*pos);
-				// TODO
+				eraseRebalance(pos);
 			}
 			void									erase(iterator first, iterator last)
 			{
