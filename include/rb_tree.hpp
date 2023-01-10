@@ -16,10 +16,11 @@ namespace ft
 		private:
 			typedef _rb_tree_node<T>	_Self;
 		public:
+			typedef T					value_type;
 			T							value;
 			_Self*						parent;
 			_Self*						left;
-			_Self						right;
+			_Self*						right;
 			_rb_tree_color				color;
 		public:
 			_rb_tree_node():
@@ -82,10 +83,9 @@ namespace ft
 			key_compare		mCompare;
 		public:
 			_rb_tree() : 
-				mHeader(), mCurrentSize(0), mAllocator(std::allocator<value_type>()), mCompare()
+				mHeader(), mCurrentSize(0), mAllocator(Allocator()), mCompare()
 			{
 				mHeader = getNode();
-				mCompare = key_compare();
 			}
 			_rb_tree(const _Self& other) : 
 				mHeader(), mCurrentSize(other.size()), mAllocator(other.mAllocator), mCompare()
@@ -105,7 +105,12 @@ namespace ft
 			}
 			link_type	getNode()
 			{
-				return (mAllocator.allocate(1));
+				link_type node = mAllocator.allocate(1);
+
+				node->left = NULL;
+				node->right = NULL;
+				node->parent = NULL;
+				return (node);
 			}
 			allocator_type	getAllocator()
 			{
@@ -129,18 +134,18 @@ namespace ft
 			}
 			link_type	findNodeParent(iterator hint, const value_type& val)
 			{
-				link_type node = (--hint).base();
+				link_type node = (--hint).mCurrent;
 				
 				while (node)
 				{
-					if (key_compare(val, node->first))
+					if (mCompare(val.first, node->value.first)) // val < node
 					{
 						if (node->left)
 							node = node->left;
 						else
 							return (node);
 					}
-					else if (key_compare(node->first, val))
+					else if (mCompare(node->value.first, val.first)) // val > node
 					{
 						if (node->right)
 							node = node->right;
@@ -152,14 +157,15 @@ namespace ft
 						return (mHeader);
 					}
 				}
-				if (hint != begin())
-					return (++begin(), val); // find from root
+				if (hint.mCurrent != root())
+					return (findNodeParent(++iterator(root()), val)); // find from root
+				return (mHeader);
 			}
 			// TODO: UNDERSTAND THIS CODE!!!
-			static void rotateLeft(_Self* node)
+			void rotateLeft(link_type node)
 			{
-				_Self* child = node->right;
-				_Self* parent = node->parent;
+				link_type child = node->right;
+				link_type parent = node->parent;
 
 				if (child->left != NULL)
 					child->left->parent = node;
@@ -169,7 +175,9 @@ namespace ft
 				child->left = node;
 				child->parent = parent;
 
-				if (parent != NULL)
+				if (parent == mHeader)
+					mHeader->parent = child;
+				else if (parent != NULL)
 				{
 					if (parent->left == node)
 						parent->left = child;
@@ -177,20 +185,21 @@ namespace ft
 						parent->right = child;
 				}
 			}
-			static void rotateRight(_Self* node)
+			void rotateRight(link_type node)
 			{
-				_Self* child = node->left;
-				_Self* parent = node->parent;
+				link_type child = node->left;
+				link_type parent = node->parent;
 
 				if (child->right != NULL)
 					child->right->parent = node;
 
 				node->left = child->right;
-				node->parent = child;
 				child->right = node;
 				child->parent = parent;
 
-				if (parent != NULL)
+				if (parent == mHeader)
+					mHeader->parent = child;
+				else if (parent != NULL)
 				{
 					if (parent->right == node)
 						parent->right = child;
@@ -200,7 +209,7 @@ namespace ft
 			}
 			link_type grandparent(link_type node)
 			{
-				if ((node != NULL) && (node->parent != NULL))
+				if ((node != NULL) && (node->parent != NULL) && (node->parent != mHeader))
 					return (node->parent->parent);
 				else
 					return (NULL);
@@ -208,6 +217,7 @@ namespace ft
 			link_type uncle(link_type node)
 			{
 				link_type grandParent = grandparent(node);
+
 				if (grandParent == NULL)
 					return (NULL); // No grandparent means no uncle
 				if (node->parent == grandParent->left)
@@ -217,60 +227,71 @@ namespace ft
 			}
 			link_type sibling(link_type node)
 			{
-				if (node == node->parent->left)
+				if (node->parent == mHeader)
+					return (NULL);
+				else if (node == node->parent->left)
 					return node->parent->right;
 				else
 					return node->parent->left;
 			}
-			// case 1 if parent is root
+			// case 1 if node is root -> just exit
 			ft::pair<iterator, bool> insertCase1(link_type node)
 			{
-				if (node->parent == mHeader)
+				if (node->parent == mHeader) // is root
+				{
+					mHeader->left = root()->minNode();
+					mHeader->right = root()->maxNode();
+					node->color = BLACK;
 					return (ft::pair<iterator, bool>(iterator(node), true));
-				insertCase2(node);
+				}
+				return (insertCase2(node));
 			}
-			// case 2 if parent is black
+			// case 2 if parent is black -> just exit
 			ft::pair<iterator, bool> insertCase2(link_type node)
 			{
 				if (node->parent->color == BLACK)
+				{
+					mHeader->left = root()->minNode();
+					mHeader->right = root()->maxNode();
 					return (ft::pair<iterator, bool>(iterator(node), true));
-				insertCase3(node);
+				}
+				return (insertCase3(node));
 			}
 			// case 3 if parent is red and uncle is red
 			ft::pair<iterator, bool> insertCase3(link_type node)
 			{
-				link_type uncle = uncle(node);
+				link_type u = uncle(node);
 				link_type granParent;
 
-				if (uncle && uncle->color == RED)
+				if (u && u->color == RED)
 				{
 					node->parent->color = BLACK;
-					uncle->color = BLACK;
+					u->color = BLACK;
 					granParent = grandparent(node);
 					granParent->color = RED;
-					insert_case1(granParent);
+					return (insertCase1(granParent));
 				}
 				else
 				{
-					insertCase4(node);
+					return (insertCase4(node));
 				}
 			}
 			// case 4 if parent is red and uncle is black
 			ft::pair<iterator, bool> insertCase4(link_type node)
 			{
-				link_type *grandParent = grandparent(node);
+				link_type grandParent = grandparent(node);
 
 				if ((node == node->parent->right) && (node->parent == grandParent->left))
 				{
-					rotate_left(node->parent);
+					rotateLeft(node->parent);
 					node = node->left;
 				}
 				else if ((node == node->parent->left) && (node->parent == grandParent->right))
 				{
-					rotate_right(node->parent);
+					rotateRight(node->parent);
 					node = node->right;
 				}
-				insertCase5(node);
+				return (insertCase5(node));
 			}
 			// case 5 if parent is right of grand parent -> left rotaion
 			ft::pair<iterator, bool> insertCase5(link_type node)
@@ -283,21 +304,42 @@ namespace ft
 					rotateRight(grandParent);
 				else
 					rotateLeft(grandParent);
+				mHeader->left = root()->minNode();
+				mHeader->right = root()->maxNode();
+				return (ft::pair<iterator, bool>(iterator(node), true));
+			}
+			ft::pair<iterator, bool> insertRoot(const value_type& value)
+			{
+				link_type newNode = getNode();
+				link_type parent = mHeader;
+
+				newNode->color = BLACK;
+				newNode->value = value;
+				newNode->parent = parent;
+				mHeader->parent = newNode;
+				mHeader->left = newNode;
+				mHeader->right = newNode;
+				++mCurrentSize;
+				return (ft::pair<iterator, bool>(iterator(newNode), true));
 			}
 			// insertion node
 			ft::pair<iterator, bool> insertUnique(iterator hint, const value_type& value)
 			{
+				iterator findPos;
+				if ((findPos = find(value.first)) != end())
+					return (ft::pair<iterator, bool>(findPos, false));
 				// first, add node to leaf node
-				link_type newNode = getNode(hint);
-				link_type parent = findNodeParent(value);
+				link_type newNode = getNode();
+				link_type parent = findNodeParent(hint, value);
 
 				newNode->color = RED;
 				newNode->value = value;
 				newNode->parent = parent;
-				if (parent == mHeader || key_compare(parent->value, value)) // root case or left child
-					parent->left = newNode;
-				else // right child
+				++mCurrentSize;
+				if (mCompare(parent->value.first, value.first)) // node < parent
 					parent->right = newNode;
+				else // right child
+					parent->left = newNode;
 				return (insertCase1(newNode));
 			}
 			bool isLeaf(link_type node) { return (!node->left && !node->right); }
@@ -311,41 +353,151 @@ namespace ft
 				else if (node->parent ->right == node)
 					node->parent->right = child;
 			}
-			// delete node and rebalance
-			// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
-			void eraseRebalance(iterator pos)
+			link_type bstDelete(link_type node)
 			{
-				link_type node = pos.base();
-
-				if (!node->left && !node->right) // node is leaf
+				if (node == NULL)
+					return (NULL);
+				if (isLeaf(node)) // just delete node...
 				{
 					if (node == root())
 					{
 						mHeader->parent = NULL;
 						mHeader->left = NULL;
 						mHeader->right = NULL;
-					}
-					else if (node->parent->left == node)
-					{
-						node->parent->left = NULL;
+						node->color = RED; // leaf root case doesn't care in rb_tree deletion
 					}
 					else
 					{
-						node->parent->right = NULL;
+						if (node->parent->left == node)
+						{
+							node->parent->left = NULL;
+						}
+						else
+						{
+							node->parent->right = NULL;
+						}
 					}
+					return (node);
+				}
+				else // swap
+				{
+					link_type swapNode;
+
+					if (node->right)
+						swapNode = node->right.minNode();
+					else
+						swapNode = node->left->maxNode();
+					node->value = swapNode->value; // swap
+					return (bstDelete(swapNode));
+				}
+			}
+			bool isBlack(link_type node)
+			{
+				return (!node || node->color == BLACK);
+			}
+			void delCase1(link_type node)
+			{
+				if (node->color == RED)
+				{
 					destroy(node);
-					--mCurrentSize;
 					return ;
+				}
+			}
+			void delCase2(link_type node)
+			{
+				link_type sib = sibling(node);
+				if (sib->color == RED) // parent is black
+				{
+					sib->color = BLACK;
+					node->parent->color = RED;
+					if (node == node->parent->left)
+						rotateLeft(node->parent);
+					else
+						rotateRight(node->parent);
+				}
+				delCase3(node);
+			}
+			void delCase3(link_type node)
+			{
+				link_type sib = sibling(node);
+				if (sib->color == BLACK && node->parent->color == BLACK && isBlack(sib->left) && isBlack(sib->right))
+				{
+					sib->color = RED;
+					delCase1(node->parent);
+				}
+				else
+					delCase4(node);
+			}
+			void delCase4(link_type node)
+			{
+				link_type sib = sibling(node);
+				if (node->parent == RED && sib->color == BLACK && isBlack(sib->left) && isBlack(sib->right))
+				{
+					node->parent->color = RED;
+				}
+				else
+					delCase5(node);
+			}
+			void delCase5(link_type node)
+			{
+				link_type sib = sibling(node);
+				if (sib->color == BLACK)
+				{
+					if (node == node->parent->left && isBlack(sib->left) && !isBlack(sib->right))
+					{
+						sib->color = RED;
+						sib->right.color = BLACK;
+						rotateRight(sib);
+					}
+					else if (node == node->parent->right && isBlack(sib->left) && !isBlack(sib->right))
+					{
+						sib->color = RED;
+						sib->right.color = BLACK;
+						rotateLeft(sib);
+					}
+				}
+				delCase6(node);
+			}
+			void delCase6(link_type node)
+			{
+				link_type sib = sibling(node);
+				
+				sib->color = node->parent->color;
+				node->parent->color = BLACK;
+				
+				if (node == node->parent->left)
+				{
+					sib->right.color = BLACK;
+					rotateLeft(node->parent);
 				}
 				else
 				{
-					
+					sib->left->color = BLACK;
+					rotateRight(node->parent);
+				}
+			}
+			// delete node and rebalance
+			// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+			void eraseRebalance(link_type node)
+			{
+				node = bstDelete(node); // this node always leaf node
+				delCase1(node);
+				if (size())
+				{
+					mHeader->left = root()->minNode();
+					mHeader->right = root()->maxNode();
+				}
+				else
+				{
+					mHeader->left = NULL;
+					mHeader->right = NULL;
+					mHeader->parent = NULL;
 				}
 			}
 		public:
 			//  iterators
-			iterator								begin()		FT_NOEXCEPT			{ return (iterator(leftMost())); }
-			const_iterator							begin()		const FT_NOEXCEPT	{ return (const_iterator(leftMost())); }
+			iterator								begin()		FT_NOEXCEPT			{ return (size() ? iterator(leftMost()) : end()); }
+			const_iterator							begin()		const FT_NOEXCEPT	{ return (size() ? const_iterator(leftMost()) : end()); }
 			iterator								end()		FT_NOEXCEPT			{ return (iterator(mHeader)); }
 			const_iterator							end()		const FT_NOEXCEPT	{ return (iterator(mHeader)); }
 			reverse_iterator						rbegin()	FT_NOEXCEPT			{ return (reverse_iterator(end())); }
@@ -362,24 +514,30 @@ namespace ft
 			}
 			ft::pair<iterator, bool>				insert(const value_type& value)
 			{
-				return (insertUnique(++root(), value));
+				if (size())
+					return (insertUnique(++iterator(root()), value));
+				else
+					return (insertRoot(value));
 			}
 			// ignore hint
 			iterator								insert(iterator hint, const value_type& value)
 			{
-				insertUnique(hint, value);
+				if (!size())
+					insertRoot(value);
+				else
+					insertUnique(hint, value);
 			}
 			template< class InputIt >
 			void									insert(InputIt first, InputIt last)
 			{
 				for (; first != last; ++first)
 				{
-					insertUnique(++root(), *first);
+					insert(*first);
 				}
 			}
 			void									erase(iterator pos)
 			{
-				eraseRebalance(pos);
+				eraseRebalance(pos.mCurrent);
 			}
 			void									erase(iterator first, iterator last)
 			{
@@ -427,11 +585,11 @@ namespace ft
 					return (end());
 				while (node)
 				{
-					if (key_compare(key, node->value.first)) // key < node
+					if (mCompare(key, node->value.first)) // key < node
 					{
 						node = node->left;
 					}
-					else if (key_compare(node->value.first, key)) // key > node
+					else if (mCompare(node->value.first, key)) // key > node
 					{
 						node = node->right;
 					}
@@ -450,11 +608,11 @@ namespace ft
 					return (end());
 				while (node)
 				{
-					if (key_compare(key, node->value.first)) // key < node
+					if (mCompare(key, node->value.first)) // key < node
 					{
 						node = node->left;
 					}
-					else if (key_compare(node->value.first, key)) // key > node
+					else if (mCompare(node->value.first, key)) // key > node
 					{
 						node = node->right;
 					}
