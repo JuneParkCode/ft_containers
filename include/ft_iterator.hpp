@@ -165,18 +165,18 @@ namespace ft
 	class bst_iterator
 	{
 		private:
-			NodeType* 											mCurrent;
 			typedef NodeType									node_type;
 			typedef bst_iterator<NodeType>						_Self;
 		public:
-			typedef  NodeType									value_type;
+			node_type* 											mCurrent;
+			typedef NodeType									value_type;
 			typedef typename std::bidirectional_iterator_tag	iterator_category;
 			typedef ptrdiff_t									difference_type;
-			typedef	value_type*									pointer;
-			typedef value_type&									reference;
+			typedef typename node_type::value_type*				pointer;
+			typedef typename node_type::value_type&				reference;
 		public:
-			bst_iterator() : mCurrent() {};
-			bst_iterator(const node_type& node) : mCurrent(node) {}
+			bst_iterator() : mCurrent(NULL) {};
+			bst_iterator(node_type* node) : mCurrent(node) {}
 			template<typename U> // const iterator conversion
 			bst_iterator(const bst_iterator<U>& it) : mCurrent(it.base()) {}
 			template<typename U> // const iterator conversion
@@ -186,51 +186,51 @@ namespace ft
 			FT_INLINE  void				increment() FT_NOEXCEPT
 			{
 				// find next larger element
-				if (mCurrent->rChild)
+				if (mCurrent->right)
 				{
-					mCurrent = mCurrent->rChild;
+					mCurrent = mCurrent->right;
 					// children is larger than previous node 
-					while (mCurrent->lChild)
+					while (mCurrent->left)
 					{
-						mCurrent = mCurrent->lChild;
+						mCurrent = mCurrent->left;
 					}
 				}
 				// children is not larger than previous node.
 				else
 				{
 					// go to parent until parent > current
-					node_type parent = mCurrent->parent;
-					while (parent && mCurrent == parent->rChild) // parent < current
+					node_type* parent = mCurrent->parent;
+					while (parent && mCurrent == parent->right) // parent < current
 					{
 						mCurrent = parent;
 						parent = mCurrent->parent;
 					}
-					if (!parent || parent->lChild == mCurrent) // parent is next node
+					if (!parent || parent->left == mCurrent) // parent is next node
 						mCurrent = parent;
 				}
 			}
 			FT_INLINE  void				decrement() FT_NOEXCEPT
 			{
 				// find largest element that smaller than current elemnet
-				if (mCurrent->lChild)
+				if (mCurrent->left)
 				{
-					mCurrent = mCurrent->lChild;
+					mCurrent = mCurrent->left;
 					// children is smaller than previous node 
-					while (mCurrent->rChild) // find right-most node of left tree
+					while (mCurrent->right) // find right-most node of left tree
 					{
-						mCurrent = mCurrent->rChild;
+						mCurrent = mCurrent->right;
 					}
 				}
 				else
 				{
 					// go to parent until parent < current
-					node_type parent = mCurrent->parent;
-					while (parent && mCurrent == parent->lChild) // parent > current
+					node_type* parent = mCurrent->parent;
+					while (parent && mCurrent == parent->left) // parent > current
 					{
 						mCurrent = parent;
 						parent = mCurrent->parent;
 					}
-					if (!parent || parent->rChild == mCurrent) // parent is next node
+					if (!parent || parent->right == mCurrent) // parent is next node
 						mCurrent = parent;
 				}
 			}
@@ -303,13 +303,13 @@ namespace ft
 			FT_INLINE  void				increment() FT_NOEXCEPT
 			{
 				// find next larger element
-				if (mCurrent->rChild)
+				if (mCurrent->right)
 				{
-					mCurrent = mCurrent->rChild;
+					mCurrent = mCurrent->right;
 					// children is larger than previous node 
-					while (mCurrent->lChild)
+					while (mCurrent->left)
 					{
-						mCurrent = mCurrent->lChild;
+						mCurrent = mCurrent->left;
 					}
 				}
 				// children is not larger than previous node.
@@ -317,37 +317,37 @@ namespace ft
 				{
 					// go to parent until parent > current
 					node_type parent = mCurrent->parent;
-					while (parent && mCurrent == parent->rChild) // parent < current
+					while (parent && mCurrent == parent->right) // parent < current
 					{
 						mCurrent = parent;
 						parent = mCurrent->parent;
 					}
-					if (!parent || parent->lChild == mCurrent) // parent is next node
+					if (!parent || parent->left == mCurrent) // parent is next node
 						mCurrent = parent;
 				}
 			}
 			FT_INLINE  void				decrement() FT_NOEXCEPT
 			{
 				// find largest element that smaller than current elemnet
-				if (mCurrent->lChild)
+				if (mCurrent->left)
 				{
-					mCurrent = mCurrent->lChild;
+					mCurrent = mCurrent->left;
 					// children is smaller than previous node 
-					while (mCurrent->rChild) // find right-most node of left tree
+					while (mCurrent->right) // find right-most node of left tree
 					{
-						mCurrent = mCurrent->rChild;
+						mCurrent = mCurrent->right;
 					}
 				}
 				else
 				{
 					// go to parent until parent < current
 					node_type parent = mCurrent->parent;
-					while (parent && mCurrent == parent->lChild) // parent > current
+					while (parent && mCurrent == parent->left) // parent > current
 					{
 						mCurrent = parent;
 						parent = mCurrent->parent;
 					}
-					if (!parent || parent->rChild == mCurrent) // parent is next node
+					if (!parent || parent->right == mCurrent) // parent is next node
 						mCurrent = parent;
 				}
 			}

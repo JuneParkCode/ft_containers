@@ -8,7 +8,7 @@
 
 namespace ft
 {
-	template <class Key, class T, class Compare = std::less<Key>,  class Allocator = std::allocator<std::pair<const Key, T>>>
+	template <class Key, class T, class Compare = std::less<Key>,  class Allocator = std::allocator<_rb_tree_node<ft::pair<Key, T> > > >
 	class map
 	{
 		public:
@@ -16,7 +16,7 @@ namespace ft
 			typedef T												mapped_type;
 			typedef ft::pair<key_type, mapped_type>					value_type;
 			typedef std::size_t						 				size_type;
-			typedef _rb_tree_node<T>								node_type;
+			typedef _rb_tree_node<value_type>						node_type;
 			typedef std::ptrdiff_t									difference_type;
 			typedef Compare											key_compare;
 			typedef Allocator										allocator_type;
@@ -64,36 +64,36 @@ namespace ft
 			}
 			map& operator=(const map& other)
 			{
-				this->mAllocator = other.mAllocator;
 				this->mTree = other.mTree;
+				return (*this);
 			}
 			allocator_type&							getAllocator() const	{ return (mTree.getAllocator()); }
 		public:
 			//  element access
-			reference								operator[](const Key& key)	FT_NOEXCEPT
+			mapped_type								operator[](const Key& key)	FT_NOEXCEPT
 			{
 				iterator pos = mTree.find(key);
 				
 				if (pos == end())
-					return (insert(value_type(key, mapped_type())));
-				return (*pos);
+					return ((insert(value_type(key, mapped_type())).first)->second);
+				return ((*pos).second);
 			}
 			// at throws out of bound
-			reference								at(const Key& key)
+			mapped_type&							at(const Key& key)
 			{
 				iterator pos = mTree.find(key);
 				
 				if (pos == end())
 					throw (std::out_of_range("out of range at : map::at()\n"));
-				return (*pos);
+				return ((*pos).second);
 			}
-			const_reference							at(const Key& key) const
+			const mapped_type&						at(const Key& key) const
 			{
 				const_iterator pos = mTree.find(key);
 				
 				if (pos == end())
 					throw (std::out_of_range("out of range at : map::at()\n"));
-				return (*pos);
+				return (*(*pos).seconds);
 			}
 			//  iterators
 			iterator								begin()		FT_NOEXCEPT							{ return (mTree.begin()); }
@@ -110,7 +110,7 @@ namespace ft
 			//  modifiers
 			void									clear()											{ mTree.clear(); }
 			ft::pair<iterator, bool>				insert(const value_type& value)					{ return (mTree.insert(value)); }
-			iterator								insert(iterator hint, const value_type& value)	{ return (mTree.insert(value));	}
+			iterator								insert(iterator hint, const value_type& value)	{ return (mTree.insert(hint, value));	}
 			template< class InputIt >
 			void									insert(InputIt first, InputIt last)				{ mTree.insert(first, last); }
 			void									erase(iterator pos)								{ mTree.erase(pos); }
@@ -118,7 +118,7 @@ namespace ft
 			size_type								erase(const Key& key)							{ mTree.erase(key); }
 			void									swap(map& other)								{ mTree.swap(other.mTree); }
 			//  lookup
-			size_type								count(const Key& key) const						{ return (mTree.count()); }
+			size_type								count(const Key& key) const						{ return (mTree.count(key)); }
 			iterator								find(const Key& key)							{ return (mTree.find(key)); }
 			const_iterator							find(const Key& key) const						{ return (mTree.find(key)); }
 			ft::pair<iterator,iterator>				equal_range(const Key& key);
