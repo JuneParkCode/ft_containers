@@ -41,6 +41,8 @@ namespace ft
 			_Self*	minNode()
 			{
 				_Self* node = this;
+				if (node == NULL)
+					return (NULL);
 				while (node->left)
 				{
 					node = node->left;
@@ -50,6 +52,8 @@ namespace ft
 			_Self*	maxNode()
 			{
 				_Self* node = this;
+				if (node == NULL)
+					return (NULL);
 				while (node->right)
 				{
 					node = node->right;
@@ -100,7 +104,7 @@ namespace ft
 		private:
 			void destroy(link_type node)
 			{
-				~(*node);
+				node->~node_type();
 				putNode(node);
 			}
 			link_type	getNode()
@@ -384,7 +388,7 @@ namespace ft
 					link_type swapNode;
 
 					if (node->right)
-						swapNode = node->right.minNode();
+						swapNode = node->right->minNode();
 					else
 						swapNode = node->left->maxNode();
 					node->value = swapNode->value; // swap
@@ -482,6 +486,7 @@ namespace ft
 			{
 				node = bstDelete(node); // this node always leaf node
 				delCase1(node);
+				--mCurrentSize;
 				if (size())
 				{
 					mHeader->left = root()->minNode();
