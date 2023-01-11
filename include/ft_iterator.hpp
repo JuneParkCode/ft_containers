@@ -178,9 +178,9 @@ namespace ft
 			bst_iterator() : mCurrent(NULL) {};
 			bst_iterator(node_type* node) : mCurrent(node) {}
 			template<typename U> // const iterator conversion
-			bst_iterator(const bst_iterator<U>& it) : mCurrent(it.base()) {}
+			bst_iterator(const bst_iterator<U>& it) : mCurrent(it.mCurrent) {}
 			template<typename U> // const iterator conversion
-			node_type&					operator=(const bst_iterator<U>& it) { mCurrent = it.base(); return (*this); }
+			node_type&					operator=(const bst_iterator<U>& it) { mCurrent = it.mCurrent; return (*this); }
 		protected:
 			/** NOTE: BELOW FUNCTIONS MUST BE TESTED */
 			FT_INLINE  void				increment() FT_NOEXCEPT
@@ -205,33 +205,39 @@ namespace ft
 						mCurrent = parent;
 						parent = mCurrent->parent;
 					}
-					if (!parent || parent->left == mCurrent) // parent is next node
-						mCurrent = parent;
+					mCurrent = parent;
 				}
 			}
 			FT_INLINE  void				decrement() FT_NOEXCEPT
 			{
-				// find largest element that smaller than current elemnet
-				if (mCurrent->left)
+				if (mCurrent->value.first == 7)
 				{
-					mCurrent = mCurrent->left;
-					// children is smaller than previous node 
-					while (mCurrent->right) // find right-most node of left tree
+					(void) mCurrent;
+					int i = 0;
+					(void) i;
+				}
+				if (mCurrent->left) // find maximum node in subtree
+				{
+					if (mCurrent->left->parent != mCurrent) // end() case
 					{
-						mCurrent = mCurrent->right;
+						mCurrent = mCurrent->right; // goto max node of tree
+					}
+					else
+					{
+						node_type* subMaxNode = mCurrent->left->maxNode();
+						mCurrent = subMaxNode;
 					}
 				}
 				else
 				{
-					// go to parent until parent < current
-					node_type* parent = mCurrent->parent;
-					while (parent && mCurrent == parent->left) // parent > current
+					if (!mCurrent->parent)
+						return;
+					// if node is left child of parent, go to parent
+					while (mCurrent->parent && mCurrent == mCurrent->parent->left)
 					{
-						mCurrent = parent;
-						parent = mCurrent->parent;
+						mCurrent = mCurrent->parent;
 					}
-					if (!parent || parent->right == mCurrent) // parent is next node
-						mCurrent = parent;
+					mCurrent = mCurrent->parent;
 				}
 			}
 		public:
@@ -278,26 +284,26 @@ namespace ft
 	class const_bst_iterator
 	{
 		private:
-			NodeType* 											mCurrent;
 			typedef NodeType									node_type;
-			typedef bst_iterator<NodeType>						_Self;
+			typedef const_bst_iterator<NodeType>				_Self;
 		public:
 			typedef NodeType									value_type;
 			typedef typename std::bidirectional_iterator_tag	iterator_category;
 			typedef ptrdiff_t									difference_type;
-			typedef	const value_type*							pointer;
-			typedef const value_type&							reference;
+			typedef	const typename node_type::value_type*		pointer;
+			typedef const typename node_type::value_type&		reference;
 		public:
+			NodeType* 											mCurrent;
 			const_bst_iterator() : mCurrent() {};
-			const_bst_iterator(const node_type& node) : mCurrent(node) {}
+			const_bst_iterator(node_type* node) : mCurrent(node) {}
 			template<typename U> // const iterator conversion
-			const_bst_iterator(const const_bst_iterator<U>& it) : mCurrent(it.base()) {}
+			const_bst_iterator(const const_bst_iterator<U>& it) : mCurrent(it.mCurrent) {}
 			template<typename U> // const iterator conversion
-			const_bst_iterator(const bst_iterator<U>& it) : mCurrent(it.base()) {}
+			const_bst_iterator(const bst_iterator<U>& it) : mCurrent(it.mCurrent) {}
 			template<typename U> // const iterator conversion
-			node_type&					operator=(const const_bst_iterator<U>& it) { mCurrent = it.base(); return (*this); }
+			node_type&					operator=(const const_bst_iterator<U>& it) { mCurrent = it.mCurrent; return (*this); }
 			template<typename U> // const iterator conversion
-			node_type&					operator=(const bst_iterator<U>& it) { mCurrent = it.base(); return (*this); }
+			node_type&					operator=(const bst_iterator<U>& it) { mCurrent = it.mCurrent; return (*this); }
 		protected:
 			/** NOTE: BELOW FUNCTIONS MUST BE TESTED */
 			FT_INLINE  void				increment() FT_NOEXCEPT
@@ -316,39 +322,37 @@ namespace ft
 				else
 				{
 					// go to parent until parent > current
-					node_type parent = mCurrent->parent;
+					node_type* parent = mCurrent->parent;
 					while (parent && mCurrent == parent->right) // parent < current
 					{
 						mCurrent = parent;
 						parent = mCurrent->parent;
 					}
-					if (!parent || parent->left == mCurrent) // parent is next node
-						mCurrent = parent;
+					mCurrent = parent;
 				}
 			}
 			FT_INLINE  void				decrement() FT_NOEXCEPT
 			{
-				// find largest element that smaller than current elemnet
-				if (mCurrent->left)
+				if (mCurrent->left) // find maximum node in subtree
 				{
-					mCurrent = mCurrent->left;
-					// children is smaller than previous node 
-					while (mCurrent->right) // find right-most node of left tree
+					if (mCurrent->left->parent != mCurrent) // end() case
 					{
-						mCurrent = mCurrent->right;
+						mCurrent = mCurrent->right; // goto max node of tree
+					}
+					else
+					{
+						node_type* subMaxNode = mCurrent->left->maxNode();
+						mCurrent = subMaxNode;
 					}
 				}
 				else
 				{
-					// go to parent until parent < current
-					node_type parent = mCurrent->parent;
-					while (parent && mCurrent == parent->left) // parent > current
+					// if node is left child of parent, go to 
+					while (mCurrent->parent && mCurrent == mCurrent->parent->left)
 					{
-						mCurrent = parent;
-						parent = mCurrent->parent;
+						mCurrent = mCurrent->parent;
 					}
-					if (!parent || parent->right == mCurrent) // parent is next node
-						mCurrent = parent;
+					mCurrent = mCurrent->parent;
 				}
 			}
 		public:

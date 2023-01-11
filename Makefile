@@ -6,16 +6,16 @@
 #    By: sungjpar <sungjpar@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/03/10 00:54:23 by sungjpar          #+#    #+#              #
-#    Updated: 2023/01/04 16:34:54 by sungjpar         ###   ########seoul.kr   #
+#    Updated: 2023/01/11 10:46:54 by sungjpar         ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
 CC = c++
 
-CFLAGS = -Wall -Wextra -Werror -std=c++98  -pedantic 
+CFLAGS = -Wall -Wextra -Werror -std=c++11 -pedantic 
 
 ifdef SANITIZE
-	CFLAGS = -Wall -Wextra -Werror -g3 -fsanitize=address
+	CFLAGS = -Wall -Wextra -Werror -std=c++11 -g3 -fsanitize=address
 endif
 
 NAME = container

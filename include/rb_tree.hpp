@@ -5,6 +5,8 @@
 #include "ft_pair.hpp"
 #include <cstddef>
 #include <memory>
+#include <iostream>
+#include <set>
 
 namespace ft
 {
@@ -65,10 +67,9 @@ namespace ft
 	template <class Key, class Value, class Compare, class Allocator>
 	class _rb_tree
 	{
-		private:
-			typedef ft::pair<Key, Value>							value_type;
+		public:
 			typedef Key												key_type;
-			typedef Value											mapped_type;
+			typedef Value											value_type;
 			typedef std::size_t						 				size_type;
 			typedef _rb_tree_node<value_type>						node_type;
 			typedef bst_iterator<node_type>							iterator;
@@ -80,6 +81,11 @@ namespace ft
 			typedef Allocator										allocator_type;
 			typedef node_type*										link_type;
 			typedef _rb_tree<Key, Value, Compare, Allocator>		_Self;
+			typedef value_type&										reference;
+			typedef const value_type&								const_reference;
+			typedef value_type*										pointer;
+			typedef const value_type*								const_pointer;
+
 		private:
 			link_type		mHeader;
 			size_type		mCurrentSize;
@@ -101,7 +107,62 @@ namespace ft
 			{
 				mHeader = getNode();
 			}
+			template <class InputIt>
+			_rb_tree(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()):
+				mHeader(), mCurrentSize(0), mAllocator(alloc), mCompare(comp)
+			{
+				for (; first != last; ++first)
+				{
+					insert(*first);
+				}
+			}
+			_rb_tree& operator=(const _rb_tree& other)
+			{
+				mAllocator = other.mAllocator;
+				mCompare = other.mCompare;
+				for (_Self::const_iterator it = other.begin(); it != other.end(); ++it)
+				{
+					insert(*it);
+				}
+				return (*this);
+			}
+			~_rb_tree()
+			{
+				clear();
+				destroy(mHeader);
+			}
 		private:
+			void check(link_type node, bool& res, std::set<int>& path)
+			{
+				if (node == NULL)
+					return;
+				if (res == false)
+					return ;
+				if (node->parent->color == RED && node->color == RED)
+				{
+					res = false;
+					return ;	
+				}
+				if (node->left == NULL || node->right == NULL)
+				{
+					// calculate black node numbers to go there..
+					int pathBlack = 0;
+					link_type temp = node;
+					while (temp != mHeader)
+					{
+						pathBlack += (temp->color == BLACK);
+						temp = temp->parent;
+					}
+					path.insert(pathBlack);
+					if (path.size() > 1)
+					{
+						res = false;
+						return ;
+					}
+				}
+				check(node->left, res, path);
+				check(node->right, res, path);
+			}
 			void destroy(link_type node)
 			{
 				node->~node_type();
@@ -116,6 +177,19 @@ namespace ft
 				node->parent = NULL;
 				return (node);
 			}
+			link_type	createNode(const value_type& value)
+			{
+				link_type tmp = getNode();
+				try
+				{
+					new (tmp) value_type(value);
+				}
+				catch (...)
+				{
+					putNode(tmp);
+				}
+				return (tmp);
+			}
 			allocator_type	getAllocator()
 			{
 				return (mAllocator);
@@ -128,17 +202,17 @@ namespace ft
 			{
 				return (mHeader->parent);
 			}
-			link_type	leftMost()
+			link_type	leftMost() const
 			{
 				return (mHeader->left);
 			}
-			link_type	rightMost()
+			link_type	rightMost() const
 			{
 				return (mHeader->right);
 			}
 			link_type	findNodeParent(iterator hint, const value_type& val)
 			{
-				link_type node = (--hint).mCurrent;
+				link_type node = hint.mCurrent->parent == mHeader ? root() : hint.mCurrent->parent;
 				
 				while (node)
 				{
@@ -162,7 +236,7 @@ namespace ft
 					}
 				}
 				if (hint.mCurrent != root())
-					return (findNodeParent(++iterator(root()), val)); // find from root
+					return (findNodeParent(iterator(root()), val)); // find from root
 				return (mHeader);
 			}
 			// TODO: UNDERSTAND THIS CODE!!!
@@ -198,6 +272,7 @@ namespace ft
 					child->right->parent = node;
 
 				node->left = child->right;
+				node->parent = child;
 				child->right = node;
 				child->parent = parent;
 
@@ -265,13 +340,12 @@ namespace ft
 			ft::pair<iterator, bool> insertCase3(link_type node)
 			{
 				link_type u = uncle(node);
-				link_type granParent;
 
 				if (u && u->color == RED)
 				{
+					link_type granParent = grandparent(node);
 					node->parent->color = BLACK;
 					u->color = BLACK;
-					granParent = grandparent(node);
 					granParent->color = RED;
 					return (insertCase1(granParent));
 				}
@@ -314,11 +388,10 @@ namespace ft
 			}
 			ft::pair<iterator, bool> insertRoot(const value_type& value)
 			{
-				link_type newNode = getNode();
+				link_type newNode = createNode(value);
 				link_type parent = mHeader;
 
 				newNode->color = BLACK;
-				newNode->value = value;
 				newNode->parent = parent;
 				mHeader->parent = newNode;
 				mHeader->left = newNode;
@@ -333,11 +406,10 @@ namespace ft
 				if ((findPos = find(value.first)) != end())
 					return (ft::pair<iterator, bool>(findPos, false));
 				// first, add node to leaf node
-				link_type newNode = getNode();
-				link_type parent = findNodeParent(hint, value);
+				link_type newNode = createNode(value);
+				link_type parent = findNodeParent(iterator(hint), value);
 
 				newNode->color = RED;
-				newNode->value = value;
 				newNode->parent = parent;
 				++mCurrentSize;
 				if (mCompare(parent->value.first, value.first)) // node < parent
@@ -357,146 +429,32 @@ namespace ft
 				else if (node->parent ->right == node)
 					node->parent->right = child;
 			}
-			link_type bstDelete(link_type node)
-			{
-				if (node == NULL)
-					return (NULL);
-				if (isLeaf(node)) // just delete node...
-				{
-					if (node == root())
-					{
-						mHeader->parent = NULL;
-						mHeader->left = NULL;
-						mHeader->right = NULL;
-						node->color = RED; // leaf root case doesn't care in rb_tree deletion
-					}
-					else
-					{
-						if (node->parent->left == node)
-						{
-							node->parent->left = NULL;
-						}
-						else
-						{
-							node->parent->right = NULL;
-						}
-					}
-					return (node);
-				}
-				else // swap
-				{
-					link_type swapNode;
 
-					if (node->right)
-						swapNode = node->right->minNode();
-					else
-						swapNode = node->left->maxNode();
-					node->value = swapNode->value; // swap
-					return (bstDelete(swapNode));
-				}
-			}
 			bool isBlack(link_type node)
 			{
 				return (!node || node->color == BLACK);
-			}
-			void delCase1(link_type node)
-			{
-				if (node->color == RED)
-				{
-					destroy(node);
-					return ;
-				}
-			}
-			void delCase2(link_type node)
-			{
-				link_type sib = sibling(node);
-				if (sib->color == RED) // parent is black
-				{
-					sib->color = BLACK;
-					node->parent->color = RED;
-					if (node == node->parent->left)
-						rotateLeft(node->parent);
-					else
-						rotateRight(node->parent);
-				}
-				delCase3(node);
-			}
-			void delCase3(link_type node)
-			{
-				link_type sib = sibling(node);
-				if (sib->color == BLACK && node->parent->color == BLACK && isBlack(sib->left) && isBlack(sib->right))
-				{
-					sib->color = RED;
-					delCase1(node->parent);
-				}
-				else
-					delCase4(node);
-			}
-			void delCase4(link_type node)
-			{
-				link_type sib = sibling(node);
-				if (node->parent == RED && sib->color == BLACK && isBlack(sib->left) && isBlack(sib->right))
-				{
-					node->parent->color = RED;
-				}
-				else
-					delCase5(node);
-			}
-			void delCase5(link_type node)
-			{
-				link_type sib = sibling(node);
-				if (sib->color == BLACK)
-				{
-					if (node == node->parent->left && isBlack(sib->left) && !isBlack(sib->right))
-					{
-						sib->color = RED;
-						sib->right.color = BLACK;
-						rotateRight(sib);
-					}
-					else if (node == node->parent->right && isBlack(sib->left) && !isBlack(sib->right))
-					{
-						sib->color = RED;
-						sib->right.color = BLACK;
-						rotateLeft(sib);
-					}
-				}
-				delCase6(node);
-			}
-			void delCase6(link_type node)
-			{
-				link_type sib = sibling(node);
-				
-				sib->color = node->parent->color;
-				node->parent->color = BLACK;
-				
-				if (node == node->parent->left)
-				{
-					sib->right.color = BLACK;
-					rotateLeft(node->parent);
-				}
-				else
-				{
-					sib->left->color = BLACK;
-					rotateRight(node->parent);
-				}
 			}
 			// delete node and rebalance
 			// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
 			void eraseRebalance(link_type node)
 			{
-				node = bstDelete(node); // this node always leaf node
-				delCase1(node);
-				--mCurrentSize;
-				if (size())
+				// node is delete target.
+				(void) node;
+			}
+			void clearTree(link_type root)
+			{
+				if (root == NULL || root == mHeader)
+					return ;
+				clearTree(root->left);
+				clearTree(root->right);
+				if (isLeaf(root))
 				{
-					mHeader->left = root()->minNode();
-					mHeader->right = root()->maxNode();
-				}
-				else
-				{
-					mHeader->left = NULL;
-					mHeader->right = NULL;
-					mHeader->parent = NULL;
+					if (root->parent && root->parent != mHeader)
+					{
+						link_type&	parentChildPointer = root->parent->left == root ? root->parent->left : root->parent->right;
+						parentChildPointer = NULL;
+					}
+					destroy(root);
 				}
 			}
 		public:
@@ -515,12 +473,18 @@ namespace ft
 			//  modifiers
 			void									clear()
 			{
+				if (!size())
+					return ;
+				clearTree(root());
+				mHeader->parent = NULL;
+				mHeader->left = NULL;
+				mHeader->right = NULL;
 				mCurrentSize = 0;
 			}
 			ft::pair<iterator, bool>				insert(const value_type& value)
 			{
 				if (size())
-					return (insertUnique(++iterator(root()), value));
+					return (insertUnique(iterator(root()), value));
 				else
 					return (insertRoot(value));
 			}
@@ -528,9 +492,9 @@ namespace ft
 			iterator								insert(iterator hint, const value_type& value)
 			{
 				if (!size())
-					insertRoot(value);
+					return (insertRoot(value).first);
 				else
-					insertUnique(hint, value);
+					return (insertUnique(hint, value).first);
 			}
 			template< class InputIt >
 			void									insert(InputIt first, InputIt last)
@@ -557,7 +521,7 @@ namespace ft
 
 				if (it == end())
 					return (0);
-				erasse(it);
+				erase(it);
 				return (1);
 			}
 			void									swap(_Self& other)
@@ -565,14 +529,17 @@ namespace ft
 				allocator_type tempAloc = mAllocator;
 				link_type tempHead = mHeader;
 				size_type tempSize = mCurrentSize;
+				key_compare tempComp = mCompare;
 				// swap to this
 				mAllocator = other.mAllocator;
 				mHeader = other.mHeader;
 				mCurrentSize = other.mCurrentSize;
+				mCompare = other.mCompare;
 				// swap to other
 				other.mAllocator = tempAloc;
 				other.mHeader = tempHead;
 				other.mCurrentSize = tempSize;
+				other.mCompare = tempComp;
 			}
 			//  lookup
 			size_type								count(const Key& key) const
@@ -607,7 +574,7 @@ namespace ft
 			}
 			const_iterator							find(const Key& key) const
 			{
-				link_type node = root();
+				link_type node = mHeader->parent;
 
 				if (node == mHeader)
 					return (end());
@@ -627,6 +594,18 @@ namespace ft
 					}
 				}
 				return (end());
+			}
+			bool isRbTree()
+			{
+				if (size() == 0)
+					return (true);
+				if (root()->color == RED)
+					return (false);
+				bool res = true;
+				std::set<int> path;
+				std::cout << "HEADER ADDRESS : " << mHeader << " : ";
+				check(root(), res, path);
+				return (res);
 			}
 	};
 }

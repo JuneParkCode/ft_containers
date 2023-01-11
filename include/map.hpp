@@ -8,28 +8,28 @@
 
 namespace ft
 {
-	template <class Key, class T, class Compare = std::less<Key>,  class Allocator = std::allocator<_rb_tree_node<ft::pair<Key, T> > > >
+	template <class Key, class T, class Compare = std::less<Key>,  class Allocator = std::allocator<_rb_tree_node<ft::pair<const Key, T> > > >
 	class map
 	{
 		public:
 			typedef Key												key_type;
 			typedef T												mapped_type;
-			typedef ft::pair<key_type, mapped_type>					value_type;
-			typedef std::size_t						 				size_type;
-			typedef _rb_tree_node<value_type>						node_type;
-			typedef std::ptrdiff_t									difference_type;
+			typedef T												data_type;
+			typedef ft::pair<const key_type, mapped_type>			value_type;
 			typedef Compare											key_compare;
+			typedef _rb_tree<Key, value_type, Compare, Allocator>	tree_type;
+			typedef typename tree_type::size_type			 		size_type;
+			typedef typename tree_type::difference_type				difference_type;
 			typedef Allocator										allocator_type;
-			typedef value_type&										reference;
-			typedef const value_type&								const_reference;
-			typedef typename allocator_type::pointer				pointer;
-			typedef typename allocator_type::const_pointer			const_pointer;
-			typedef _rb_tree<Key, T, Compare, Allocator>			tree_type;
+			typedef typename tree_type::reference					reference;
+			typedef typename tree_type::const_reference				const_reference;
+			typedef typename tree_type::reference					pointer;
+			typedef typename tree_type::const_reference				const_pointer;
 			//  iterator types
-			typedef bst_iterator<node_type>							iterator;
-			typedef typename ft::reverse_iterator<iterator>			reverse_iterator;
-			typedef const_bst_iterator<node_type>					const_iterator;
-			typedef typename ft::reverse_iterator<const_iterator>	const_reverse_iterator;
+			typedef typename tree_type::iterator					iterator;
+			typedef typename tree_type::reverse_iterator			reverse_iterator;
+			typedef typename tree_type::const_iterator				const_iterator;
+			typedef typename tree_type::const_reverse_iterator		const_reverse_iterator;
 		private:
 			tree_type		mTree;
 		public:
@@ -115,7 +115,7 @@ namespace ft
 			void									insert(InputIt first, InputIt last)				{ mTree.insert(first, last); }
 			void									erase(iterator pos)								{ mTree.erase(pos); }
 			void									erase(iterator first, iterator last)			{ mTree.erase(first, last); }
-			size_type								erase(const Key& key)							{ mTree.erase(key); }
+			size_type								erase(const Key& key)							{ return (mTree.erase(key)); }
 			void									swap(map& other)								{ mTree.swap(other.mTree); }
 			//  lookup
 			size_type								count(const Key& key) const						{ return (mTree.count(key)); }
@@ -130,5 +130,6 @@ namespace ft
 			//  observers
 			key_compare								key_comp() const;
 			map::value_compare 						value_comp() const;
+			bool									isRbTree()  {return (mTree.isRbTree()); }
 	};
 }
