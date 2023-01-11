@@ -11,6 +11,8 @@ namespace ft
 	template <class Key, class T, class Compare = std::less<Key>,  class Allocator = std::allocator<_rb_tree_node<ft::pair<const Key, T> > > >
 	class map
 	{
+		private:
+			typedef map<Key, T, Compare, Allocator>					_Self;
 		public:
 			typedef Key												key_type;
 			typedef T												mapped_type;
@@ -36,6 +38,7 @@ namespace ft
 			//  member class 
 			class value_compare : std::binary_function<value_type, value_type, bool>
 			{
+				friend class map<Key, T, Compare, Allocator>;
 				protected:
 					Compare	comp;
 					value_compare(Compare c) : comp(c) {}
@@ -53,9 +56,8 @@ namespace ft
 			{
 			}
 			map(const map& other):
-				mTree()
+				mTree(other.mTree)
 			{
-				*this = other;
 			}
 			template <class InputIt>
 			map(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()):
