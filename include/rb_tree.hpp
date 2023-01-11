@@ -100,6 +100,7 @@ namespace ft
 			_rb_tree(const _Self& other) : 
 				mHeader(), mCurrentSize(other.size()), mAllocator(other.mAllocator), mCompare()
 			{
+				mHeader = getNode();
 				*this = other;
 			}
 			_rb_tree(key_compare comp, allocator_type& alloc) : 
@@ -111,6 +112,7 @@ namespace ft
 			_rb_tree(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()):
 				mHeader(), mCurrentSize(0), mAllocator(alloc), mCompare(comp)
 			{
+				mHeader = getNode();
 				for (; first != last; ++first)
 				{
 					insert(*first);
@@ -120,6 +122,8 @@ namespace ft
 			{
 				mAllocator = other.mAllocator;
 				mCompare = other.mCompare;
+				if (size())
+					clear();
 				for (_Self::const_iterator it = other.begin(); it != other.end(); ++it)
 				{
 					insert(*it);
