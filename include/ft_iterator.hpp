@@ -200,7 +200,7 @@ namespace ft
 				{
 					// go to parent until parent > current
 					node_type* parent = mCurrent->parent;
-					while (parent && mCurrent == parent->right) // parent < current
+					while (parent && mCurrent == parent->right && parent->parent != mCurrent) // parent < current // if root case, it not works....
 					{
 						mCurrent = parent;
 						parent = mCurrent->parent;
@@ -233,7 +233,7 @@ namespace ft
 					if (!mCurrent->parent)
 						return;
 					// if node is left child of parent, go to parent
-					while (mCurrent->parent && mCurrent == mCurrent->parent->left)
+					while (mCurrent->parent && mCurrent == mCurrent->parent->left && mCurrent->parent->parent != mCurrent)
 					{
 						mCurrent = mCurrent->parent;
 					}
@@ -323,7 +323,7 @@ namespace ft
 				{
 					// go to parent until parent > current
 					node_type* parent = mCurrent->parent;
-					while (parent && mCurrent == parent->right) // parent < current
+					while (parent && mCurrent == parent->right && parent->parent != mCurrent) // parent < current // if root case, it not works....
 					{
 						mCurrent = parent;
 						parent = mCurrent->parent;
@@ -333,6 +333,12 @@ namespace ft
 			}
 			FT_INLINE  void				decrement() FT_NOEXCEPT
 			{
+				if (mCurrent->value.first == 7)
+				{
+					(void) mCurrent;
+					int i = 0;
+					(void) i;
+				}
 				if (mCurrent->left) // find maximum node in subtree
 				{
 					if (mCurrent->left->parent != mCurrent) // end() case
@@ -347,8 +353,10 @@ namespace ft
 				}
 				else
 				{
-					// if node is left child of parent, go to 
-					while (mCurrent->parent && mCurrent == mCurrent->parent->left)
+					if (!mCurrent->parent)
+						return;
+					// if node is left child of parent, go to parent
+					while (mCurrent->parent && mCurrent == mCurrent->parent->left && mCurrent->parent->parent != mCurrent)
 					{
 						mCurrent = mCurrent->parent;
 					}
