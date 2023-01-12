@@ -210,12 +210,6 @@ namespace ft
 			}
 			FT_INLINE  void				decrement() FT_NOEXCEPT
 			{
-				if (mCurrent->value.first == 7)
-				{
-					(void) mCurrent;
-					int i = 0;
-					(void) i;
-				}
 				if (mCurrent->left) // find maximum node in subtree
 				{
 					if (mCurrent->left->parent != mCurrent) // end() case
@@ -333,12 +327,6 @@ namespace ft
 			}
 			FT_INLINE  void				decrement() FT_NOEXCEPT
 			{
-				if (mCurrent->value.first == 7)
-				{
-					(void) mCurrent;
-					int i = 0;
-					(void) i;
-				}
 				if (mCurrent->left) // find maximum node in subtree
 				{
 					if (mCurrent->left->parent != mCurrent) // end() case

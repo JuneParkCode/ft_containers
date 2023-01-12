@@ -317,6 +317,22 @@ namespace ft
 				else
 					return node->parent->left;
 			}
+			bool isLeaf(link_type node) // leaf node -> not object...
+			{
+				return (node->left == NULL && node->right == NULL);
+			}
+			bool isRed(link_type node)
+			{
+				if (node == NULL)
+					return (false);
+				return (node->color == RED);
+			}
+			bool isBlack(link_type node)
+			{
+				if (node == NULL)
+					return (true);
+				return (node->color == BLACK);
+			}
 			// case 1 if node is root -> just exit
 			ft::pair<iterator, bool> insertCase1(link_type node)
 			{
@@ -422,28 +438,134 @@ namespace ft
 					parent->left = newNode;
 				return (insertCase1(newNode));
 			}
-			bool isLeaf(link_type node) { return (!node->left && !node->right); }
-			void replaceNode(link_type node, link_type child)
+			void treeRebalanceErase(link_type node)
 			{
-				child->parent = node->parent;
-				if (node->parent == mHeader)
-					node->parent->parent = child; // set to root
-				else if (node->parent->left == node)
-					node->parent->left = child;
-				else if (node->parent ->right == node)
-					node->parent->right = child;
-			}
-
-			bool isBlack(link_type node)
-			{
-				return (!node || node->color == BLACK);
-			}
-			// delete node and rebalance
-			// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
-			void eraseRebalance(link_type node)
-			{
-				// node is delete target.
-				(void) node;
+				link_type __z = node;
+				link_type __y = __z;
+				link_type __x = 0;
+				link_type __x_parent = 0;
+				if (__y->left == 0)     // __z has at most one non-null child. y == z.
+					__x = __y->right;     // __x might be null.
+				else
+					if (__y->right == 0)  // __z has exactly one non-null child. y == z.
+					__x = __y->left;    // __x is not null.
+					else {                   // __z has two non-null children.  Set __y to
+					__y = __y->right;   //   __z's successor.  __x might be null.
+					while (__y->left != 0)
+						__y = __y->left;
+					__x = __y->right;
+				}
+				
+				if (__y != __z) {          // relink y in place of z.  y is z's successor
+					__z->left->parent = __y; 
+					__y->left = __z->left;
+					if (__y != __z->right) {
+						__x_parent = __y->parent;
+						if (__x)
+							__x->parent = __y->parent;
+						__y->parent->left = __x;      // __y must be a child of left
+						__y->right = __z->right;
+						__z->right->parent = __y;
+					}
+					else
+						__x_parent = __y;  
+					if (mHeader->parent == __z)
+						mHeader->parent = __y;
+					else if (__z->parent->left == __z)
+						__z->parent->left = __y;
+					else 
+						__z->parent->right = __y;
+					__y->parent = __z->parent;
+					std::swap(__y->color, __z->color);
+					__y = __z;
+					// __y now points to node to be actually deleted
+				}
+				else {                        // __y == __z
+					__x_parent = __y->parent;
+					if (__x) __x->parent = __y->parent;   
+						if (mHeader->parent == __z)
+						mHeader->parent = __x;
+						else 
+							if (__z->parent->left == __z)
+								__z->parent->left = __x;
+							else
+								__z->parent->right = __x;
+					if (mHeader->left == __z) 
+						if (__z->right == 0)        // __z->left must be null also
+							mHeader->left = __z->parent;
+						// makes mHeader->left == _M_header if __z == mHeader->parent
+						else
+							mHeader->left = __x->minNode();
+					if (mHeader->right == __z)  
+						if (__z->left == 0)         // __z->right must be null also
+							mHeader->right = __z->parent;  
+						// makes mHeader->right == _M_header if __z == mHeader->parent
+						else                      // __x == __z->left
+							mHeader->right = __x->maxNode();
+				}
+				if (__y->color != RED) { 
+					while (__x != mHeader->parent && (__x == 0 || __x->color == BLACK))
+					if (__x == __x_parent->left) {
+						link_type __w = __x_parent->right;
+						if (__w->color == RED) {
+						__w->color = BLACK;
+						__x_parent->color = RED;
+						rotateLeft(__x_parent);
+						__w = __x_parent->right;
+						}
+						if ((__w->left == 0 || 
+							__w->left->color == BLACK) &&
+							(__w->right == 0 || 
+							__w->right->color == BLACK)) {
+						__w->color = RED;
+						__x = __x_parent;
+						__x_parent = __x_parent->parent;
+						} else {
+						if (__w->right == 0 || 
+							__w->right->color == BLACK) {
+							if (__w->left) __w->left->color = BLACK;
+							__w->color = RED;
+							rotateRight(__w);
+							__w = __x_parent->right;
+						}
+						__w->color = __x_parent->color;
+						__x_parent->color = BLACK;
+						if (__w->right) __w->right->color = BLACK;
+						rotateLeft(__x_parent);
+						break;
+						}
+					} else {                  // same as above, with right <-> left.
+						link_type __w = __x_parent->left;
+						if (__w->color == RED) {
+						__w->color = BLACK;
+						__x_parent->color = RED;
+						rotateRight(__x_parent);
+						__w = __x_parent->left;
+						}
+						if ((__w->right == 0 || 
+							__w->right->color == BLACK) &&
+							(__w->left == 0 || 
+							__w->left->color == BLACK)) {
+						__w->color = RED;
+						__x = __x_parent;
+						__x_parent = __x_parent->parent;
+						} else {
+						if (__w->left == 0 || 
+							__w->left->color == BLACK) {
+							if (__w->right) __w->right->color = BLACK;
+							__w->color = RED;
+							rotateLeft(__w);
+							__w = __x_parent->left;
+						}
+						__w->color = __x_parent->color;
+						__x_parent->color = BLACK;
+						if (__w->left) __w->left->color = BLACK;
+						rotateRight(__x_parent);
+						break;
+						}
+					}
+					if (__x) __x->color = BLACK;
+				}
 			}
 			void clearTree(link_type root)
 			{
@@ -510,7 +632,12 @@ namespace ft
 			}
 			void									erase(iterator pos)
 			{
-				eraseRebalance(pos.mCurrent);
+				if (size())
+				{
+					treeRebalanceErase(pos.mCurrent);
+					destroy(pos.mCurrent);
+					--mCurrentSize;
+				}
 			}
 			void									erase(iterator first, iterator last)
 			{

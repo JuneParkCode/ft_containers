@@ -238,6 +238,65 @@ std::vector<int> erase_test_3(ft::map<T, V> mp) {
     return v;
 }
 
+template <class T, class V>
+std::vector<int> copy_constructor_test(ft::map<T, V> mp) {
+
+    std::vector<int> v;
+
+    for (int i = 0, j = 10; i < 30 * _ratio; ++i, ++j) {
+        mp.insert(ft::make_pair(i, j));
+    }
+    ft::map<int, int> mp2 = mp;
+    ft::map<int, int>::iterator it = mp2.begin();
+    for (int i = 0; i < 30 * _ratio; ++i, it++) {
+        v.push_back(it->first);
+        v.push_back(it->second);
+    }
+    return v;
+}
+
+template <class T, class V>
+std::vector<int> assign_overload_test(ft::map<T, V> mp) {
+    std::vector<int> v;
+    for (int i = 0, j = 10; i < 20 * _ratio; ++i, ++j)
+        mp.insert(ft::make_pair(i, j));
+    ft::map<T, V> mp2;
+    for (int i = 20 * _ratio, j = 200010; i < 40 * _ratio; ++i, ++j)
+        mp2.insert(ft::make_pair(i, j));
+    mp2 = mp;
+    typename ft::map<T, V>::iterator it = mp2.begin();
+    for (; it != mp2.end(); it++) {
+        v.push_back(it->first);
+        v.push_back(it->second);
+    }
+    v.push_back(mp2.size());
+    return v;
+}
+
+
+template <class T, class V>
+        std::vector<int> size_test(std::map<T, V> mp) {
+    std::vector<int> v;
+    for (int i = 0, j = 0; i < 100 * _ratio; ++i, ++j)
+        mp.insert(std::make_pair(i, j));
+    v.push_back(mp.size());
+    for (int i = 0; i < 43 * _ratio; ++i)
+        mp.erase(i);
+    v.push_back(mp.size());
+    return v;
+}
+
+template <class T, class V>
+	std::vector<int> size_test(ft::map<T, V> mp) {
+    std::vector<int> v;
+    for (int i = 0, j = 0; i < 100 * _ratio; ++i, ++j)
+        mp.insert(ft::make_pair(i, j));
+    v.push_back(mp.size());
+    for (int i = 0; i < 43 * _ratio; ++i)
+        mp.erase(i);
+    v.push_back(mp.size());
+    return v;
+}
 
 #include <cstdlib>
 
@@ -249,33 +308,7 @@ int main()
 {
 	atexit(lk);
 	// mapTest();
-	std::map<int, int> m1;
+	// std::map<int, int> m1;
 	ft::map<int, int> m2;
-	m2.insert(ft::make_pair(1, 2));
-	std::cout << ((m2.isRbTree()) ? "IS RB TREE\n" : "IS NOT RB TREE\n");
-	// m2.insert(ft::make_pair(2, 2));
-	// std::cout << ((m2.isRbTree()) ? "IS RB TREE\n" : "IS NOT RB TREE\n");
-	// m2.insert(ft::make_pair(3, 2));
-	// std::cout << ((m2.isRbTree()) ? "IS RB TREE\n" : "IS NOT RB TREE\n");
-	// m2.insert(ft::make_pair(100, 10));
-	// std::cout << ((m2.isRbTree()) ? "IS RB TREE\n" : "IS NOT RB TREE\n");
-	// m2.insert(ft::make_pair(60, 10));
-	// std::cout << ((m2.isRbTree()) ? "IS RB TREE\n" : "IS NOT RB TREE\n");
-	// m2.insert(ft::make_pair(30, 10));
-	// std::cout << ((m2.isRbTree()) ? "IS RB TREE\n" : "IS NOT RB TREE\n");
-	// m2.insert(ft::make_pair(130, 10));
-	// std::cout << ((m2.isRbTree()) ? "IS RB TREE\n" : "IS NOT RB TREE\n");
-	// for (auto it = --m2.end(); it != m2.begin(); --it)
-	// {
-	// 	std::cout << it->first << std::endl;
-	// }
-	// for (auto it = m2.begin(); it != m2.end(); ++it)
-	// {
-	// 	std::cout << it->first << std::endl;
-	// }
-	// std::cout << "iterator done\n";
-	// iterators_test(m1);
-	// m2.clear();
-	// iterators_test(m2);
 	erase_test_3(m2);
 }
