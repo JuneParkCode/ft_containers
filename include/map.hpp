@@ -19,7 +19,9 @@ namespace ft
 			typedef T												data_type;
 			typedef ft::pair<const key_type, mapped_type>			value_type;
 			typedef Compare											key_compare;
-			typedef _rb_tree<Key, value_type, Compare, Allocator>	tree_type;
+			typedef _rb_tree<Key, value_type,
+						ft::_Select1st<value_type>,
+						key_compare, Allocator>						tree_type;
 			typedef typename tree_type::size_type			 		size_type;
 			typedef typename tree_type::difference_type				difference_type;
 			typedef Allocator										allocator_type;
@@ -72,7 +74,7 @@ namespace ft
 			allocator_type&							getAllocator() const	{ return (mTree.getAllocator()); }
 		public:
 			//  element access
-			mapped_type								operator[](const Key& key)	FT_NOEXCEPT
+			mapped_type&								operator[](const Key& key)	FT_NOEXCEPT
 			{
 				iterator pos = mTree.find(key);
 				

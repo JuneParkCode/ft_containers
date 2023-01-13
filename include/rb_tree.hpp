@@ -12,6 +12,14 @@ namespace ft
 {
 	enum _rb_tree_color { RED, BLACK };
 
+	// select1st and select2nd are extensions: they are not part of the standard.
+	template <class _Pair>
+	struct _Select1st : public std::unary_function<_Pair, typename _Pair::first_type> {
+	inline const typename _Pair::first_type& operator()(const _Pair& __x) const {
+		return __x.first;
+	}
+	};
+
 	template <class T>
 	class _rb_tree_node
 	{
@@ -64,7 +72,7 @@ namespace ft
 			}
 	};
 
-	template <class Key, class Value, class Compare, class Allocator>
+	template <class Key, class Value, class KeyOfValue, class Compare, class Allocator>
 	class _rb_tree
 	{
 		public:
@@ -80,7 +88,8 @@ namespace ft
 			typedef Compare											key_compare;
 			typedef Allocator										allocator_type;
 			typedef node_type*										link_type;
-			typedef _rb_tree<Key, Value, Compare, Allocator>		_Self;
+			typedef _rb_tree<Key, Value,
+								 KeyOfValue, Compare, Allocator>	_Self;
 			typedef value_type&										reference;
 			typedef const value_type&								const_reference;
 			typedef value_type*										pointer;
@@ -136,6 +145,7 @@ namespace ft
 				destroy(mHeader);
 			}
 		private:
+			static const key_type& _S_key(link_type __x)	{ return KeyOfValue()(__x->value); }
 			void check(link_type node, bool& res, std::set<int>& path)
 			{
 				if (node == NULL)
@@ -216,32 +226,23 @@ namespace ft
 			}
 			link_type	findNodeParent(iterator hint, const value_type& val)
 			{
-				link_type node = hint.mCurrent->parent == mHeader ? root() : hint.mCurrent->parent;
-				
+				link_type node = hint.mCurrent->parent == mHeader ? mHeader->parent : hint.mCurrent->parent;
+				link_type parent = mHeader; // y > node
+
 				while (node)
 				{
-					if (mCompare(val.first, node->value.first)) // val < node
+					if (!mCompare(_S_key(node), KeyOfValue()(val))) // comp(node.key, value.key) == false
 					{
-						if (node->left)
-							node = node->left;
-						else
-							return (node);
-					}
-					else if (mCompare(node->value.first, val.first)) // val > node
-					{
-						if (node->right)
-							node = node->right;
-						else
-							return (node);
+						parent = node;
+						node = node->left;
 					}
 					else
 					{
-						return (mHeader);
+						parent = node;
+						node = node->right;
 					}
-				}
-				if (hint.mCurrent != root())
-					return (findNodeParent(iterator(root()), val)); // find from root
-				return (mHeader);
+				} 
+				return (parent);
 			}
 			// TODO: UNDERSTAND THIS CODE!!!
 			void rotateLeft(link_type node)
@@ -338,8 +339,8 @@ namespace ft
 			{
 				if (node->parent == mHeader) // is root
 				{
-					mHeader->left = root()->minNode();
-					mHeader->right = root()->maxNode();
+					mHeader->left = mHeader->parent->minNode();
+					mHeader->right = mHeader->parent->maxNode();
 					node->color = BLACK;
 					return (ft::pair<iterator, bool>(iterator(node), true));
 				}
@@ -350,8 +351,8 @@ namespace ft
 			{
 				if (node->parent->color == BLACK)
 				{
-					mHeader->left = root()->minNode();
-					mHeader->right = root()->maxNode();
+					mHeader->left = mHeader->parent->minNode();
+					mHeader->right = mHeader->parent->maxNode();
 					return (ft::pair<iterator, bool>(iterator(node), true));
 				}
 				return (insertCase3(node));
@@ -402,8 +403,8 @@ namespace ft
 					rotateRight(grandParent);
 				else
 					rotateLeft(grandParent);
-				mHeader->left = root()->minNode();
-				mHeader->right = root()->maxNode();
+				mHeader->left = mHeader->parent->minNode();
+				mHeader->right = mHeader->parent->maxNode();
 				return (ft::pair<iterator, bool>(iterator(node), true));
 			}
 			ft::pair<iterator, bool> insertRoot(const value_type& value)
@@ -423,7 +424,7 @@ namespace ft
 			ft::pair<iterator, bool> insertUnique(iterator hint, const value_type& value)
 			{
 				iterator findPos;
-				if ((findPos = find(value.first)) != end())
+				if ((findPos = find(KeyOfValue()(value))) != end())
 					return (ft::pair<iterator, bool>(findPos, false));
 				// first, add node to leaf node
 				link_type newNode = createNode(value);
@@ -432,18 +433,20 @@ namespace ft
 				newNode->color = RED;
 				newNode->parent = parent;
 				++mCurrentSize;
-				if (mCompare(parent->value.first, value.first)) // node < parent
-					parent->right = newNode;
-				else // right child
+				if (!mCompare(_S_key(parent), KeyOfValue()(value))) // node < parent
 					parent->left = newNode;
+				else // right child
+					parent->right = newNode;
 				return (insertCase1(newNode));
 			}
 			void treeRebalanceErase(link_type node)
 			{
+				// node is delete target
 				link_type __z = node;
 				link_type __y = __z;
 				link_type __x = 0;
 				link_type __x_parent = 0;
+				
 				if (__y->left == 0)     // __z has at most one non-null child. y == z.
 					__x = __y->right;     // __x might be null.
 				else
@@ -483,88 +486,109 @@ namespace ft
 				else {                        // __y == __z
 					__x_parent = __y->parent;
 					if (__x) __x->parent = __y->parent;   
-						if (mHeader->parent == __z)
+					if (mHeader->parent == __z)
 						mHeader->parent = __x;
-						else 
-							if (__z->parent->left == __z)
-								__z->parent->left = __x;
-							else
-								__z->parent->right = __x;
+					else
+					{
+						if (__z->parent->left == __z)
+							__z->parent->left = __x;
+						else
+							__z->parent->right = __x;
+					}
 					if (mHeader->left == __z) 
+					{
 						if (__z->right == 0)        // __z->left must be null also
 							mHeader->left = __z->parent;
 						// makes mHeader->left == _M_header if __z == mHeader->parent
 						else
 							mHeader->left = __x->minNode();
+					}
 					if (mHeader->right == __z)  
+					{
 						if (__z->left == 0)         // __z->right must be null also
 							mHeader->right = __z->parent;  
 						// makes mHeader->right == _M_header if __z == mHeader->parent
 						else                      // __x == __z->left
 							mHeader->right = __x->maxNode();
+					}
 				}
-				if (__y->color != RED) { 
+				if (__y->color != RED)
+				{ 
 					while (__x != mHeader->parent && (__x == 0 || __x->color == BLACK))
-					if (__x == __x_parent->left) {
-						link_type __w = __x_parent->right;
-						if (__w->color == RED) {
-						__w->color = BLACK;
-						__x_parent->color = RED;
-						rotateLeft(__x_parent);
-						__w = __x_parent->right;
+					{
+						if (__x == __x_parent->left)
+						{
+							link_type __w = __x_parent->right;
+							if (__w->color == RED)
+							{
+								__w->color = BLACK;
+								__x_parent->color = RED;
+								rotateLeft(__x_parent);
+								__w = __x_parent->right;
+							}
+							if ((__w->left == 0 || 
+								__w->left->color == BLACK) &&
+								(__w->right == 0 || 
+								__w->right->color == BLACK))
+							{
+								__w->color = RED;
+								__x = __x_parent;
+								__x_parent = __x_parent->parent;
+							}
+							else
+							{
+								if (__w->right == 0 || __w->right->color == BLACK)
+								{
+									if (__w->left)
+										__w->left->color = BLACK;
+									__w->color = RED;
+									rotateRight(__w);
+									__w = __x_parent->right;
+								}
+								__w->color = __x_parent->color;
+								__x_parent->color = BLACK;
+								if (__w->right) __w->right->color = BLACK;
+								rotateLeft(__x_parent);
+								break;
+							}
 						}
-						if ((__w->left == 0 || 
-							__w->left->color == BLACK) &&
-							(__w->right == 0 || 
-							__w->right->color == BLACK)) {
-						__w->color = RED;
-						__x = __x_parent;
-						__x_parent = __x_parent->parent;
-						} else {
-						if (__w->right == 0 || 
-							__w->right->color == BLACK) {
-							if (__w->left) __w->left->color = BLACK;
-							__w->color = RED;
-							rotateRight(__w);
-							__w = __x_parent->right;
-						}
-						__w->color = __x_parent->color;
-						__x_parent->color = BLACK;
-						if (__w->right) __w->right->color = BLACK;
-						rotateLeft(__x_parent);
-						break;
-						}
-					} else {                  // same as above, with right <-> left.
-						link_type __w = __x_parent->left;
-						if (__w->color == RED) {
-						__w->color = BLACK;
-						__x_parent->color = RED;
-						rotateRight(__x_parent);
-						__w = __x_parent->left;
-						}
-						if ((__w->right == 0 || 
-							__w->right->color == BLACK) &&
-							(__w->left == 0 || 
-							__w->left->color == BLACK)) {
-						__w->color = RED;
-						__x = __x_parent;
-						__x_parent = __x_parent->parent;
-						} else {
-						if (__w->left == 0 || 
-							__w->left->color == BLACK) {
-							if (__w->right) __w->right->color = BLACK;
-							__w->color = RED;
-							rotateLeft(__w);
-							__w = __x_parent->left;
-						}
-						__w->color = __x_parent->color;
-						__x_parent->color = BLACK;
-						if (__w->left) __w->left->color = BLACK;
-						rotateRight(__x_parent);
-						break;
+						else
+						{                  // same as above, with right <-> left.
+							link_type __w = __x_parent->left;
+							if (__w->color == RED)
+							{
+								__w->color = BLACK;
+								__x_parent->color = RED;
+								rotateRight(__x_parent);
+								__w = __x_parent->left;
+							}
+							if ((__w->right == 0 || __w->right->color == BLACK) && (__w->left == 0 || __w->left->color == BLACK))
+							{
+								__w->color = RED;
+								__x = __x_parent;
+								__x_parent = __x_parent->parent;
+							}
+							else
+							{
+								if (__w->left == 0 || __w->left->color == BLACK)
+								{
+									if (__w->right)
+										__w->right->color = BLACK;
+									__w->color = RED;
+									rotateLeft(__w);
+									__w = __x_parent->left;
+								}
+								__w->color = __x_parent->color;
+								__x_parent->color = BLACK;
+								if (__w->left)
+									__w->left->color = BLACK;
+								rotateRight(__x_parent);
+								break;
+							}
 						}
 					}
-					if (__x) __x->color = BLACK;
+					if (__x)
+						__x->color = BLACK;
 				}
 			}
 			void clearTree(link_type root)
@@ -601,7 +625,7 @@ namespace ft
 			{
 				if (!size())
 					return ;
-				clearTree(root());
+				clearTree(mHeader->parent);
 				mHeader->parent = NULL;
 				mHeader->left = NULL;
 				mHeader->right = NULL;
@@ -610,7 +634,7 @@ namespace ft
 			ft::pair<iterator, bool>				insert(const value_type& value)
 			{
 				if (size())
-					return (insertUnique(iterator(root()), value));
+					return (insertUnique(iterator(mHeader->parent), value));
 				else
 					return (insertRoot(value));
 			}
@@ -641,10 +665,10 @@ namespace ft
 			}
 			void									erase(iterator first, iterator last)
 			{
-				for (; first != last; ++first)
-				{
-					erase(first);
-				}
+				if (first == begin() && last == end())
+ 				   clear();
+				while (first != last)
+					erase(first++); // using for loop access erased object
 			}
 			size_type								erase(const Key& key)
 			{
@@ -657,20 +681,10 @@ namespace ft
 			}
 			void									swap(_Self& other)
 			{
-				allocator_type tempAloc = mAllocator;
-				link_type tempHead = mHeader;
-				size_type tempSize = mCurrentSize;
-				key_compare tempComp = mCompare;
-				// swap to this
-				mAllocator = other.mAllocator;
-				mHeader = other.mHeader;
-				mCurrentSize = other.mCurrentSize;
-				mCompare = other.mCompare;
-				// swap to other
-				other.mAllocator = tempAloc;
-				other.mHeader = tempHead;
-				other.mCurrentSize = tempSize;
-				other.mCompare = tempComp;
+				std::swap(other.mAllocator, this->mAllocator);
+				std::swap(other.mHeader, this->mHeader);
+				std::swap(other.mCompare, this->mCompare);
+				std::swap(other.mCurrentSize, this->mCurrentSize);
 			}
 			//  lookup
 			size_type								count(const Key& key) const
@@ -682,23 +696,21 @@ namespace ft
 			}
 			iterator								find(const Key& key)
 			{
-				link_type node = root();
+				link_type node = mHeader->parent;
 
 				if (node == mHeader)
 					return (end());
 				while (node)
 				{
-					if (mCompare(key, node->value.first)) // key < node
+					if (!mCompare(_S_key(node), key)) // comp(node, key) == false
 					{
+						
 						node = node->left;
-					}
-					else if (mCompare(node->value.first, key)) // key > node
-					{
-						node = node->right;
 					}
 					else
 					{
-						return (iterator(node));
+						
+						node = node->right;
 					}
 				}
 				return (end());
@@ -711,31 +723,29 @@ namespace ft
 					return (end());
 				while (node)
 				{
-					if (mCompare(key, node->value.first)) // key < node
+					if (!mCompare(_S_key(node), key)) // node.key >= value.key
+					{
+						node = node->right; // find right node
+					}
+					else if (_S_key(node) == key)
+						return (const_iterator(node));
+					else // node.key < value.key
 					{
 						node = node->left;
 					}
-					else if (mCompare(node->value.first, key)) // key > node
-					{
-						node = node->right;
-					}
-					else
-					{
-						return (const_iterator(node));
-					}
-				}
+				} 
 				return (end());
 			}
 			bool isRbTree()
 			{
 				if (size() == 0)
 					return (true);
-				if (root()->color == RED)
+				if (mHeader->parent->color == RED)
 					return (false);
 				bool res = true;
 				std::set<int> path;
 				std::cout << "HEADER ADDRESS : " << mHeader << " : ";
-				check(root(), res, path);
+				check(mHeader->parent, res, path);
 				return (res);
 			}
 	};
