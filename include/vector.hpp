@@ -319,8 +319,8 @@ namespace ft
 			FT_INLINE const_reference		front() 			const FT_NOEXCEPT	{ return (mStartData[0]); }
 			FT_INLINE reference				back()				FT_NOEXCEPT			{ return (*(mFinishData - 1)); }
 			FT_INLINE const_reference		back()				const FT_NOEXCEPT	{ return (*(mFinishData - 1)); }
-			FT_INLINE const pointer			data()				const FT_NOEXCEPT	{ return (mStartData); }
-			FT_INLINE pointer				data()				FT_NOEXCEPT			{ return (mStartData); }
+			FT_INLINE const pointer			data()				const FT_NOEXCEPT	{ return (mStartData.base()); }
+			FT_INLINE pointer				data()				FT_NOEXCEPT			{ return (mStartData.base()); }
 			/** at() throws exception...  */
 			reference						at(size_type n)
 			{
@@ -490,7 +490,7 @@ namespace ft
 			}
 			iterator						erase(iterator position)
 			{
-				std::uninitialized_copy(position + 1, end(), position);
+				std::move((position + 1).base(), end().base(), position.base());
 				--mFinishData;
 				return (position);
 			}
@@ -500,7 +500,7 @@ namespace ft
 					return (first);
 				const size_type ERASE_SIZE = last - first;
 				
-				std::copy(last, end(), first);
+				std::move(last.base(), end().base(), first.base());
 				destroy(first, last);
 				mFinishData -= ERASE_SIZE;
 				return (first);
