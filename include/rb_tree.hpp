@@ -8,6 +8,13 @@
 #include <iostream>
 #include <set>
 
+/**
+ * NOTE: NOT COMPARISION UNARY FUNCTION TEMPLATE IS NOT EQUAL WITH STD::RB_TREE!
+ * REASON 1 : CAN NOT FIND KEY IF COMPARE TEMPLATE IS NOT COMPARISION (LIKE STD::PLUS, STD::MINUS ... )
+ * REASON 2 : BY THE REASON 1, THAT TREE IS NOT USABLE IN MAP
+ * REASON 3 : BUT, STILL IT WORKS TO SET SO, IT'S VALID TREE!!
+ */
+
 namespace ft
 {
 	enum _rb_tree_color { RED, BLACK };
@@ -696,45 +703,43 @@ namespace ft
 			}
 			iterator								find(const Key& key)
 			{
-				link_type node = mHeader->parent;
+				link_type node = mHeader->parent; // root
+				link_type parent = mHeader;
 
-				if (node == mHeader)
-					return (end());
 				while (node)
 				{
 					if (!mCompare(_S_key(node), key)) // comp(node, key) == false
 					{
-						
+						parent = node;
 						node = node->left;
 					}
-					else
+					else // comp(node, key) == true -> not left...
 					{
-						
 						node = node->right;
 					}
 				}
-				return (end());
+				iterator res(parent);
+				return ((res == end() || mCompare(key, _S_key(parent))) ?  end() : res);
 			}
 			const_iterator							find(const Key& key) const
 			{
-				link_type node = mHeader->parent;
+				link_type node = mHeader->parent; // root
+				link_type parent = mHeader;
 
-				if (node == mHeader)
-					return (end());
 				while (node)
 				{
-					if (!mCompare(_S_key(node), key)) // node.key >= value.key
+					if (!mCompare(_S_key(node), key)) // comp(node, key) == false
 					{
-						node = node->right; // find right node
-					}
-					else if (_S_key(node) == key)
-						return (const_iterator(node));
-					else // node.key < value.key
-					{
+						parent = node;
 						node = node->left;
 					}
-				} 
-				return (end());
+					else // comp(node, key) == true
+					{
+						node = node->right;
+					}
+				}
+				iterator res(parent);
+				return ((res == end() || mCompare(key, _S_key(parent))) ?  end() : res);
 			}
 			bool isRbTree()
 			{
