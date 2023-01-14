@@ -2,11 +2,10 @@
 #define RB_TREE_HPP
 
 #include "ft_iterator.hpp"
-#include "ft_pair.hpp"
+#include "pair.hpp"
 #include <cstddef>
 #include <memory>
-#include <iostream>
-#include <set>
+#include <set> // for check rb_tree
 
 /**
  * NOTE: NOT COMPARISION UNARY FUNCTION TEMPLATE IS NOT EQUAL WITH STD::RB_TREE!
@@ -858,7 +857,6 @@ namespace ft
 					return (false);
 				bool res = true;
 				std::set<int> path;
-				std::cout << "HEADER ADDRESS : " << mHeader << " : ";
 				check(mHeader->parent, res, path);
 				return (res);
 			}
