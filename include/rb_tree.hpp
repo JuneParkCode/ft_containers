@@ -85,7 +85,7 @@ namespace ft
 		public:
 			typedef Key												key_type;
 			typedef Value											value_type;
-			typedef std::size_t						 				size_type;
+			typedef size_t							 				size_type;
 			typedef _rb_tree_node<value_type>						node_type;
 			typedef bst_iterator<node_type>							iterator;
 			typedef typename ft::reverse_iterator<iterator>			reverse_iterator;

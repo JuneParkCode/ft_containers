@@ -112,7 +112,7 @@ namespace ft
 			//  capacity
 			FT_INLINE bool							empty()		const FT_NOEXCEPT					{ return (mTree.empty()); }
 			FT_INLINE size_type						size()		const FT_NOEXCEPT					{ return (mTree.size()); }
-			FT_INLINE size_type						max_size()	const FT_NOEXCEPT					{ return (std::min(size_type(-1) / sizeof(value_type), (size_type)std::numeric_limits<difference_type>::max())); }
+			FT_INLINE size_type						max_size()	const FT_NOEXCEPT					{ return (std::min<size_type>(size_type(-1) / sizeof(value_type), (size_type)std::numeric_limits<difference_type>::max())); }
 			//  modifiers
 			void									clear()											{ mTree.clear(); }
 			ft::pair<iterator, bool>				insert(const value_type& value)					{ return (mTree.insert(value)); }
