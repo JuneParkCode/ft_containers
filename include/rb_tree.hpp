@@ -456,31 +456,44 @@ namespace ft
 				link_type __x = 0;
 				link_type __x_parent = 0;
 				
-				if (__y->left == 0)     // __z has at most one non-null child. y == z.
-					__x = __y->right;     // __x might be null.
+				// set __y to target delete node
+				if (__y->left == 0) // __z has at most one non-null child. y == z.
+					__x = __y->right; // __x might be null.
 				else
-					if (__y->right == 0)  // __z has exactly one non-null child. y == z.
-					__x = __y->left;    // __x is not null.
-					else {                   // __z has two non-null children.  Set __y to
-					__y = __y->right;   //   __z's successor.  __x might be null.
-					while (__y->left != 0)
-						__y = __y->left;
-					__x = __y->right;
+				{
+					if (__y->right == 0) // __z has exactly one non-null child. y == z.
+						__x = __y->left; // __x is not null.
+					else
+					{
+						// __z has two non-null children.  Set __y to __z's successor.  __x might be null.
+						__y = __y->right;
+						// while _y has at most one-null child
+						while (__y->left != 0)
+							__y = __y->left;
+						__x = __y->right;
+					}
 				}
 				
-				if (__y != __z) {          // relink y in place of z.  y is z's successor
-					__z->left->parent = __y; 
+				// below if/else makes __y to be actually deleted node
+				// __y != __z -> delete target is not same as node
+				// relink y in place of z. y is z's successor
+				if (__y != __z)
+				{
+					__z->left->parent = __y;
 					__y->left = __z->left;
-					if (__y != __z->right) {
+					if (__y != __z->right)
+					{
 						__x_parent = __y->parent;
 						if (__x)
 							__x->parent = __y->parent;
-						__y->parent->left = __x;      // __y must be a child of left
+						__y->parent->left = __x; // __y must be a child of left
 						__y->right = __z->right;
 						__z->right->parent = __y;
 					}
 					else
+					{
 						__x_parent = __y;  
+					}
 					if (mHeader->parent == __z)
 						mHeader->parent = __y;
 					else if (__z->parent->left == __z)
@@ -492,9 +505,12 @@ namespace ft
 					__y = __z;
 					// __y now points to node to be actually deleted
 				}
-				else {                        // __y == __z
+				else // __y == __z
+				{ 
 					__x_parent = __y->parent;
-					if (__x) __x->parent = __y->parent;   
+					if (__x)
+						__x->parent = __y->parent;
+					// link node->parent with __x
 					if (mHeader->parent == __z)
 						mHeader->parent = __x;
 					else
@@ -504,9 +520,10 @@ namespace ft
 						else
 							__z->parent->right = __x;
 					}
+					// link left most, right most
 					if (mHeader->left == __z) 
 					{
-						if (__z->right == 0)        // __z->left must be null also
+						if (__z->right == 0) // __z->left must be null also
 							mHeader->left = __z->parent;
 						// makes mHeader->left == _M_header if __z == mHeader->parent
 						else
@@ -514,31 +531,33 @@ namespace ft
 					}
 					if (mHeader->right == __z)  
 					{
-						if (__z->left == 0)         // __z->right must be null also
+						if (__z->left == 0) // __z->right must be null also
 							mHeader->right = __z->parent;  
 						// makes mHeader->right == _M_header if __z == mHeader->parent
-						else                      // __x == __z->left
+						else // __x == __z->left
 							mHeader->right = __x->maxNode();
 					}
 				}
-				if (__y->color != RED)
+				// check delete target color... (Double black case...)
+				// __y is node to be deleted, __z is parameter node, __x is successor of __y
+				// https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+				if (__y->color != RED) // case 1
 				{ 
-					while (__x != mHeader->parent && (__x == 0 || __x->color == BLACK))
+					// __x is DB node
+					while (__x != mHeader->parent && (__x == 0 || __x->color == BLACK)) // not case 2 && is DB
 					{
 						if (__x == __x_parent->left)
 						{
-							link_type __w = __x_parent->right;
-							if (__w->color == RED)
+							link_type __w = __x_parent->right; // w is sibling of x
+							if (__w->color == RED) // case 4
 							{
 								__w->color = BLACK;
 								__x_parent->color = RED;
 								rotateLeft(__x_parent);
 								__w = __x_parent->right;
 							}
-							if ((__w->left == 0 || 
-								__w->left->color == BLACK) &&
-								(__w->right == 0 || 
-								__w->right->color == BLACK))
+							if ((__w->left == 0 || __w->left->color == BLACK) && // case 3
+								(__w->right == 0 || __w->right->color == BLACK))
 							{
 								__w->color = RED;
 								__x = __x_parent;
@@ -546,7 +565,7 @@ namespace ft
 							}
 							else
 							{
-								if (__w->right == 0 || __w->right->color == BLACK)
+								if (__w->right == 0 || __w->right->color == BLACK) // case 5
 								{
 									if (__w->left)
 										__w->left->color = BLACK;
@@ -554,15 +573,17 @@ namespace ft
 									rotateRight(__w);
 									__w = __x_parent->right;
 								}
+								// case 6
 								__w->color = __x_parent->color;
 								__x_parent->color = BLACK;
-								if (__w->right) __w->right->color = BLACK;
+								if (__w->right)
+									__w->right->color = BLACK;
 								rotateLeft(__x_parent);
 								break;
 							}
 						}
 						else
-						{                  // same as above, with right <-> left.
+						{// same as above, with right <-> left.
 							link_type __w = __x_parent->left;
 							if (__w->color == RED)
 							{
@@ -596,7 +617,7 @@ namespace ft
 							}
 						}
 					}
-					if (__x)
+					if (__x) // case 2
 						__x->color = BLACK;
 				}
 			}
