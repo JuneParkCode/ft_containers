@@ -103,30 +103,32 @@ namespace ft
 			typedef const value_type*								const_pointer;
 
 		private:
-			link_type		mHeader;
-			size_type		mCurrentSize;
-			allocator_type	mAllocator;
-			key_compare		mCompare;
+			typedef typename allocator_type::template rebind<_rb_tree_node<value_type> >::other alloc_rebind_node;
+			link_type			mHeader;
+			size_type			mCurrentSize;
+			allocator_type		mAllocator;
+			alloc_rebind_node	mAllocatorRebind;
+			key_compare			mCompare;
 		public:
 			_rb_tree() : 
-				mHeader(), mCurrentSize(0), mAllocator(Allocator()), mCompare()
+				mHeader(), mCurrentSize(0), mAllocator(Allocator()), mAllocatorRebind(), mCompare()
 			{
 				mHeader = getNode();
 			}
 			_rb_tree(const _Self& other) : 
-				mHeader(), mCurrentSize(other.size()), mAllocator(other.mAllocator), mCompare()
+				mHeader(), mCurrentSize(other.size()), mAllocator(other.mAllocator), mAllocatorRebind(other.mAllocatorRebind), mCompare()
 			{
 				mHeader = getNode();
 				*this = other;
 			}
 			_rb_tree(key_compare comp, allocator_type& alloc) : 
-				mHeader(), mCurrentSize(0), mAllocator(alloc), mCompare(comp)
+				mHeader(), mCurrentSize(0), mAllocator(alloc), mAllocatorRebind(), mCompare(comp)
 			{
 				mHeader = getNode();
 			}
 			template <class InputIt>
 			_rb_tree(InputIt first, InputIt last, const Compare& comp = Compare(), const Allocator& alloc = Allocator()):
-				mHeader(), mCurrentSize(0), mAllocator(alloc), mCompare(comp)
+				mHeader(), mCurrentSize(0), mAllocator(alloc), mAllocatorRebind(), mCompare(comp)
 			{
 				mHeader = getNode();
 				for (; first != last; ++first)
@@ -191,7 +193,7 @@ namespace ft
 			}
 			link_type	getNode()
 			{
-				link_type node = mAllocator.allocate(1);
+				link_type node = mAllocatorRebind.allocate(1);
 
 				node->left = NULL;
 				node->right = NULL;
@@ -217,7 +219,7 @@ namespace ft
 			}
 			void		putNode(link_type node)
 			{
-				mAllocator.deallocate(node, 1);
+				mAllocatorRebind.deallocate(node, 1);
 			}
 			link_type	root()
 			{
@@ -738,9 +740,95 @@ namespace ft
 						node = node->right;
 					}
 				}
-				iterator res(parent);
+				const_iterator res(parent);
 				return ((res == end() || mCompare(key, _S_key(parent))) ?  end() : res);
 			}
+			iterator lower_bound(const key_type& key)
+			{
+				link_type node = mHeader->parent; // root
+				link_type parent = mHeader;
+
+				while (node)
+				{
+					if (!mCompare(_S_key(node), key)) // comp(node, key) == false
+					{
+						parent = node;
+						node = node->left;
+					}
+					else // comp(node, key) == true
+					{
+						node = node->right;
+					}
+				}
+				return (iterator(parent));
+			}
+			const_iterator lower_bound( const Key& key ) const
+			{
+				link_type node = mHeader->parent; // root
+				link_type parent = mHeader;
+
+				while (node)
+				{
+					if (!mCompare(_S_key(node), key)) // comp(node, key) == false
+					{
+						parent = node;
+						node = node->left;
+					}
+					else // comp(node, key) == true
+					{
+						node = node->right;
+					}
+				}
+				return (const_iterator(parent));
+			}
+			iterator upper_bound(const key_type& key)
+			{
+				link_type node = mHeader->parent; // root
+				link_type parent = mHeader;
+
+				while (node)
+				{
+					if (mCompare(key, _S_key(node))) // comp(node, key) == false
+					{
+						parent = node;
+						node = node->left;
+					}
+					else // comp(node, key) == true
+					{
+						node = node->right;
+					}
+				}
+				return (iterator(parent));
+			}
+			const_iterator upper_bound( const Key& key ) const
+			{
+				link_type node = mHeader->parent; // root
+				link_type parent = mHeader;
+
+				while (node)
+				{
+					if (mCompare(key, _S_key(node))) // comp(node, key) == false
+					{
+						parent = node;
+						node = node->left;
+					}
+					else // comp(node, key) == true
+					{
+						node = node->right;
+					}
+				}
+				return (const_iterator(parent));
+			}
+			ft::pair<iterator, iterator> equal_range(const key_type& key)
+			{
+				return (ft::pair<iterator, iterator>(lower_bound(key), upper_bound(key)));
+			}
+			ft::pair<const_iterator, const_iterator> equal_range(const key_type& key) const
+			{
+				return (ft::pair<const_iterator, const_iterator>(lower_bound(key), upper_bound(key)));
+			}
+			Compare key_comp() const { return (mCompare); }
+			/** TO VALIDATE THIS TREE IS RB TREE */
 			bool isRbTree()
 			{
 				if (size() == 0)

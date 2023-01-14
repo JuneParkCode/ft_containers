@@ -4,11 +4,12 @@
 #include "ft_iterator.hpp"
 #include "ft_pair.hpp"
 #include "rb_tree.hpp"
+#include "ft_stl_util.hpp"
 
 
 namespace ft
 {
-	template <class Key, class T, class Compare = std::less<Key>,  class Allocator = std::allocator<_rb_tree_node<ft::pair<const Key, T> > > >
+	template <class Key, class T, class Compare = std::less<Key>,  class Allocator = std::allocator<ft::pair<const Key, T> > >
 	class map
 	{
 		private:
@@ -111,6 +112,7 @@ namespace ft
 			//  capacity
 			FT_INLINE bool							empty()		const FT_NOEXCEPT					{ return (mTree.empty()); }
 			FT_INLINE size_type						size()		const FT_NOEXCEPT					{ return (mTree.size()); }
+			FT_INLINE size_type						max_size()	const FT_NOEXCEPT					{ return (std::min(size_type(-1) / sizeof(value_type), (size_type)std::numeric_limits<difference_type>::max())); }
 			//  modifiers
 			void									clear()											{ mTree.clear(); }
 			ft::pair<iterator, bool>				insert(const value_type& value)					{ return (mTree.insert(value)); }
@@ -125,15 +127,53 @@ namespace ft
 			size_type								count(const Key& key) const						{ return (mTree.count(key)); }
 			iterator								find(const Key& key)							{ return (mTree.find(key)); }
 			const_iterator							find(const Key& key) const						{ return (mTree.find(key)); }
-			ft::pair<iterator,iterator>				equal_range(const Key& key);
-			ft::pair<const_iterator,const_iterator>	equal_range(const Key& key) const;
-			iterator								lower_bound(const Key& key);
-			const_iterator							lower_bound(const Key& key) const;
-			iterator								upper_bound(const Key& key);
-			const_iterator							upper_bound(const Key& key) const;
+			ft::pair<iterator,iterator>				equal_range(const Key& key)						{ return (mTree.equal_range(key));}
+			ft::pair<const_iterator,const_iterator>	equal_range(const Key& key) const				{ return (mTree.equal_range(key));}
+			iterator								lower_bound(const Key& key)						{ return (mTree.lower_bound(key));}
+			const_iterator							lower_bound(const Key& key) const				{ return (mTree.lower_bound(key));}
+			iterator								upper_bound(const Key& key)						{ return (mTree.upper_bound(key));}
+			const_iterator							upper_bound(const Key& key) const				{ return (mTree.upper_bound(key));}
 			//  observers
-			key_compare								key_comp() const;
-			map::value_compare 						value_comp() const;
+			key_compare								key_comp() const								{ return (mTree.key_comp());}
+			map::value_compare 						value_comp() const								{ return (value_compare(mTree.key_comp()));}
 			bool									isRbTree()  {return (mTree.isRbTree()); }
 	};
+	template< class Key, class T, class Compare, class Alloc >
+	bool operator==(const ft::map<Key,T,Compare,Alloc>& lhs, const ft::map<Key,T,Compare,Alloc>& rhs)
+	{
+		if (lhs.empty() && rhs.empty())
+			return (true);
+		else if (lhs.empty() || rhs.empty())
+			return (false);
+		return (ft::equal(lhs.begin(), lhs.end(), rhs.begin()));
+	}
+	template< class Key, class T, class Compare, class Alloc >
+	bool operator!=(const ft::map<Key,T,Compare,Alloc>& lhs, const ft::map<Key,T,Compare,Alloc>& rhs)
+	{
+		if (lhs.empty() && rhs.empty())
+			return (false);
+		else if (lhs.empty() || rhs.empty())
+			return (true);
+		return (!ft::equal(lhs.begin(), lhs.end(), rhs.begin()));
+	}
+	template< class Key, class T, class Compare, class Alloc >
+	bool operator<(const ft::map<Key,T,Compare,Alloc>& lhs, const ft::map<Key,T,Compare,Alloc>& rhs)
+	{
+		return (ft::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end()));
+	}
+	template< class Key, class T, class Compare, class Alloc >
+	bool operator<=(const ft::map<Key,T,Compare,Alloc>& lhs, const ft::map<Key,T,Compare,Alloc>& rhs)
+	{
+		return (!(rhs < lhs));
+	}
+	template< class Key, class T, class Compare, class Alloc >
+	bool operator>(const ft::map<Key,T,Compare,Alloc>& lhs, const ft::map<Key,T,Compare,Alloc>& rhs)
+	{
+		return (rhs < lhs);
+	}
+	template< class Key, class T, class Compare, class Alloc >
+	bool operator>=(const ft::map<Key,T,Compare,Alloc>& lhs, const ft::map<Key,T,Compare,Alloc>& rhs)
+	{
+		return (!(lhs < rhs));
+	}
 }
