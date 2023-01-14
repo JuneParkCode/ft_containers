@@ -19,6 +19,10 @@ namespace ft
 			typedef Container				_Container_type;
 			typedef stack<T, Container>		_Self;
 			_Container_type&				mContainer;
+			using typename _Container_type::iterator;
+			using typename _Container_type::const_iterator;
+			using typename _Container_type::reverse_iterator;
+			using typename _Container_type::const_reverse_iterator;
 		public:
 			using typename _Container_type::allocator_type;
 			using typename _Container_type::difference_type;
@@ -28,10 +32,6 @@ namespace ft
 			using typename _Container_type::const_reference;
 			using typename _Container_type::pointer;
 			using typename _Container_type::const_pointer;
-			using typename _Container_type::iterator;
-			using typename _Container_type::const_iterator;
-			using typename _Container_type::reverse_iterator;
-			using typename _Container_type::const_reverse_iterator;
 		/* constructor. destructors */
 		public:
 			stack() : Container(), mContainer(*this) {}

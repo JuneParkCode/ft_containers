@@ -6,7 +6,7 @@
 #    By: sungjpar <sungjpar@student.42seoul.kr>     +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2022/03/10 00:54:23 by sungjpar          #+#    #+#              #
-#    Updated: 2023/01/11 10:46:54 by sungjpar         ###   ########seoul.kr   #
+#    Updated: 2023/01/14 19:52:22 by sungjpar         ###   ########seoul.kr   #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,7 +27,12 @@ SRC_DIR = ./source/
 INC_FLAG = -I$(INC_DIR)
 
 SRC_FILES = $(addprefix $(SRC_DIR),\
-			test.cpp\
+			main.cpp\
+			test_map.cpp\
+			test_set.cpp\
+			test_vector.cpp\
+			test_stack.cpp\
+			test_utils.cpp\
 			)
 
 OBJ = ${SRC_FILES:.cpp=.o}
